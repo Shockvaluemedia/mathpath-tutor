@@ -1,4 +1,4 @@
-import openai, { AI_MODEL, getSystemPromptForGradeBand } from "./config";
+import { chatCompletion, getSystemPromptForGradeBand } from "./config";
 import { StudentProfile, TutorMessage } from "../types";
 
 interface TutorContext {
@@ -35,9 +35,7 @@ Student context:
 - Confidence: ${context.studentProfile.confidenceLevel}/10
 - Learning style: ${context.studentProfile.learningPreferences.style}
 - Current lesson: ${context.currentLesson || "general help"}
-- Skills being practiced: ${context.skillsBeingPracticed.join(", ")}
-
-Respond naturally as a tutor. Also return metadata about the interaction.`;
+- Skills being practiced: ${context.skillsBeingPracticed.join(", ")}`;
 
   const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: systemPrompt },
@@ -51,17 +49,12 @@ Respond naturally as a tutor. Also return metadata about the interaction.`;
     });
   }
 
-  // Add current message
   messages.push({ role: "user", content: message });
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const tutorResponse = await chatCompletion({
     messages,
     temperature: 0.8,
   });
-
-  const tutorResponse = response.choices[0]?.message?.content;
-  if (!tutorResponse) throw new Error("No response from AI");
 
   // Detect frustration signals
   const frustrationSignals = [
@@ -73,16 +66,11 @@ Respond naturally as a tutor. Also return metadata about the interaction.`;
     (signal) => message.toLowerCase().includes(signal)
   );
 
-  // Detect if we gave encouragement or hints
   const encouragement = /great|awesome|nice|good job|well done|keep going|you're getting/i.test(tutorResponse);
   const hintGiven = /hint|try thinking|what if|consider|remember/i.test(tutorResponse);
 
   return {
     response: tutorResponse,
-    metadata: {
-      frustrationDetected,
-      encouragement,
-      hintGiven,
-    },
+    metadata: { frustrationDetected, encouragement, hintGiven },
   };
 }

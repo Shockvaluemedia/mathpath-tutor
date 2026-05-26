@@ -1,0 +1,56 @@
+{
+  "family": "mathpath-tutor",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/mathpath-task-role",
+  "containerDefinitions": [
+    {
+      "name": "mathpath-tutor",
+      "image": "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/mathpath-tutor:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "PORT", "value": "3000" },
+        { "name": "AI_PROVIDER", "value": "bedrock" },
+        { "name": "AI_MODEL", "value": "us.anthropic.claude-sonnet-4-20250514" },
+        { "name": "AWS_REGION", "value": "us-east-1" },
+        { "name": "NEXT_PUBLIC_DEMO_MODE", "value": "false" },
+        { "name": "NEXT_PUBLIC_APP_URL", "value": "https://mathpath.yourdomain.com" }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mathpath/database-url"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mathpath/jwt-secret"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mathpath-tutor",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

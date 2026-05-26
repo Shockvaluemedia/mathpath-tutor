@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mathpath
+      POSTGRES_PASSWORD: mathpath_dev
+      POSTGRES_DB: mathpath_tutor
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mathpath"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://mathpath:mathpath_dev@db:5432/mathpath_tutor"
+      JWT_SECRET: "mathpath-docker-dev-secret"
+      AWS_REGION: "us-east-1"
+      AI_PROVIDER: "bedrock"
+      AI_MODEL: "us.anthropic.claude-sonnet-4-20250514"
+      NEXT_PUBLIC_DEMO_MODE: "false"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

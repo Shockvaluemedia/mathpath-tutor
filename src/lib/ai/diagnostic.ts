@@ -1,4 +1,4 @@
-import openai, { AI_MODEL } from "./config";
+import { chatCompletion } from "./config";
 import { StudentProfile, DiagnosticQuestion, GradeBand } from "../types";
 
 export async function generateDiagnostic(
@@ -7,8 +7,7 @@ export async function generateDiagnostic(
 ): Promise<DiagnosticQuestion[]> {
   const prompt = buildDiagnosticPrompt(studentProfile, previousResponses);
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const content = await chatCompletion({
     messages: [
       {
         role: "system",
@@ -18,12 +17,9 @@ grade band but also probe for gaps in prerequisite skills. Return valid JSON onl
       },
       { role: "user", content: prompt },
     ],
-    response_format: { type: "json_object" },
+    jsonMode: true,
     temperature: 0.7,
   });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from AI");
 
   const parsed = JSON.parse(content);
   return parsed.questions as DiagnosticQuestion[];

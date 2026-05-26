@@ -1,4 +1,4 @@
-import openai, { AI_MODEL } from "./config";
+import { chatCompletion } from "./config";
 import { StudentProfile, SkillProfile } from "../types";
 
 interface AssessmentData {
@@ -44,16 +44,15 @@ Total assessment time: ${assessmentData.totalTime}s
 Average confidence: ${assessmentData.averageConfidence}/10
 
 Return a JSON object with:
-- estimatedLevel: string describing their overall math level (e.g., "Grade 4 level, with some Grade 3 gaps")
+- estimatedLevel: string describing their overall math level
 - gradeLevelComparison: how they compare to grade-level expectations
 - masteredSkills: array of {id, name, domain, masteryScore (0-100), confidenceScore (0-100), status: "MASTERED"}
 - developingSkills: array of {id, name, domain, masteryScore, confidenceScore, status: "DEVELOPING" or "PRACTICING"}
 - weakSkills: array of {id, name, domain, masteryScore, confidenceScore, status: "NOT_STARTED" or "DEVELOPING"}
-- rootCauses: array of strings explaining WHY they struggle (e.g., "Weak number sense foundation", "Procedural gaps in multiplication")
+- rootCauses: array of strings explaining WHY they struggle
 - recommendedStartingPoint: string describing where to begin instruction`;
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const content = await chatCompletion({
     messages: [
       {
         role: "system",
@@ -63,12 +62,9 @@ but WHY they struggle. Return valid JSON only.`,
       },
       { role: "user", content: prompt },
     ],
-    response_format: { type: "json_object" },
+    jsonMode: true,
     temperature: 0.4,
   });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from AI");
 
   return JSON.parse(content) as SkillProfile;
 }

@@ -1,12 +1,92 @@
-import OpenAI from "openai";
+// AI Provider abstraction — supports OpenAI and Amazon Bedrock
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "sk-placeholder",
-});
+export type AIProvider = "openai" | "bedrock";
 
-export default openai;
+export const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || "openai";
+export const AI_MODEL = process.env.AI_MODEL || (AI_PROVIDER === "bedrock" ? "us.anthropic.claude-sonnet-4-20250514" : "gpt-4o");
+export const AWS_REGION = process.env.AWS_REGION || "us-east-1";
 
-export const AI_MODEL = process.env.AI_MODEL || "gpt-4o";
+export interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface ChatOptions {
+  messages: ChatMessage[];
+  temperature?: number;
+  jsonMode?: boolean;
+}
+
+/**
+ * Unified chat completion function that works with both OpenAI and Bedrock
+ */
+export async function chatCompletion(options: ChatOptions): Promise<string> {
+  if (AI_PROVIDER === "bedrock") {
+    return bedrockCompletion(options);
+  }
+  return openaiCompletion(options);
+}
+
+async function openaiCompletion(options: ChatOptions): Promise<string> {
+  const OpenAI = (await import("openai")).default;
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "sk-placeholder" });
+
+  const response = await client.chat.completions.create({
+    model: AI_MODEL,
+    messages: options.messages,
+    temperature: options.temperature ?? 0.7,
+    ...(options.jsonMode ? { response_format: { type: "json_object" } } : {}),
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("No response from OpenAI");
+  return content;
+}
+
+async function bedrockCompletion(options: ChatOptions): Promise<string> {
+  const { BedrockRuntimeClient, InvokeModelCommand } = await import("@aws-sdk/client-bedrock-runtime");
+
+  const client = new BedrockRuntimeClient({ region: AWS_REGION });
+
+  // Extract system message and conversation messages
+  const systemMessage = options.messages.find((m) => m.role === "system")?.content || "";
+  const conversationMessages = options.messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: [{ type: "text" as const, text: m.content }],
+    }));
+
+  // Ensure conversation starts with a user message
+  if (conversationMessages.length === 0 || conversationMessages[0].role !== "user") {
+    conversationMessages.unshift({
+      role: "user",
+      content: [{ type: "text", text: "Please respond based on the system instructions." }],
+    });
+  }
+
+  const body = JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: 4096,
+    temperature: options.temperature ?? 0.7,
+    system: systemMessage + (options.jsonMode ? "\n\nIMPORTANT: Respond with valid JSON only. No markdown, no explanation outside the JSON." : ""),
+    messages: conversationMessages,
+  });
+
+  const command = new InvokeModelCommand({
+    modelId: AI_MODEL,
+    contentType: "application/json",
+    accept: "application/json",
+    body: new TextEncoder().encode(body),
+  });
+
+  const response = await client.send(command);
+  const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+  const content = responseBody.content?.[0]?.text;
+  if (!content) throw new Error("No response from Bedrock");
+  return content;
+}
 
 export function getSystemPromptForGradeBand(gradeBand: string): string {
   switch (gradeBand) {

@@ -1,4 +1,4 @@
-import openai, { AI_MODEL } from "./config";
+import { chatCompletion } from "./config";
 import { AssessmentResponseData, EvaluationResult } from "../types";
 
 export async function evaluateResponse(
@@ -24,8 +24,7 @@ Analyze the response and return a JSON object with:
 - explanation: brief explanation of what the mistake reveals (or what mastery it shows)
 - nextAction: recommended next step ("advance", "reinforce", "reteach_prerequisite", "provide_scaffolding")`;
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const content = await chatCompletion({
     messages: [
       {
         role: "system",
@@ -33,12 +32,9 @@ Analyze the response and return a JSON object with:
       },
       { role: "user", content: prompt },
     ],
-    response_format: { type: "json_object" },
+    jsonMode: true,
     temperature: 0.3,
   });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from AI");
 
   return JSON.parse(content) as EvaluationResult;
 }

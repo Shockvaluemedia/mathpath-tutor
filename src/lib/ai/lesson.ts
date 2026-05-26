@@ -1,4 +1,4 @@
-import openai, { AI_MODEL, getSystemPromptForGradeBand } from "./config";
+import { chatCompletion, getSystemPromptForGradeBand } from "./config";
 import { StudentProfile, SkillProfile, DailyLesson } from "../types";
 
 export async function generateDailyLesson(
@@ -40,10 +40,9 @@ Return a JSON object with:
 
 Each section format: { title, instructions, content, questions?: [{question, hints: [], answer, explanation}] }
 
-Make the lesson age-appropriate, engaging, and confidence-building. Use the student's learning preference (${studentProfile.learningPreferences.style}) to shape how you present material.`;
+Make the lesson age-appropriate, engaging, and confidence-building.`;
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const content = await chatCompletion({
     messages: [
       {
         role: "system",
@@ -51,12 +50,9 @@ Make the lesson age-appropriate, engaging, and confidence-building. Use the stud
       },
       { role: "user", content: prompt },
     ],
-    response_format: { type: "json_object" },
+    jsonMode: true,
     temperature: 0.7,
   });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from AI");
 
   return JSON.parse(content) as DailyLesson;
 }

@@ -1,4 +1,4 @@
-import openai, { AI_MODEL } from "./config";
+import { chatCompletion } from "./config";
 import { ParentReportData } from "../types";
 
 interface StudentProgressData {
@@ -55,8 +55,7 @@ Write a warm, encouraging, plain-language summary for the parent. Return a JSON 
 - recommendedNextSteps: array of 2-3 specific suggestions for the parent
 - skillsGained: array of skill names where mastery improved significantly`;
 
-  const response = await openai.chat.completions.create({
-    model: AI_MODEL,
+  const content = await chatCompletion({
     messages: [
       {
         role: "system",
@@ -67,12 +66,9 @@ Use plain language - no jargon. Return valid JSON only.`,
       },
       { role: "user", content: prompt },
     ],
-    response_format: { type: "json_object" },
+    jsonMode: true,
     temperature: 0.6,
   });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("No response from AI");
 
   const parsed = JSON.parse(content);
 
