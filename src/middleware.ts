@@ -5,13 +5,15 @@ const protectedRoutes = [
   "/students",
   "/learn",
   "/tutor",
+  "/review",
+  "/achievements",
   "/onboarding",
   "/diagnostic",
   "/skill-profile",
   "/admin",
 ];
 
-const authRoutes = ["/login", "/signup"];
+const authRoutes = ["/login", "/signup", "/student-login"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,10 +31,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Auth routes: redirect to dashboard if already logged in
+  // Auth routes: redirect if already logged in
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Check if it's a student token to redirect appropriately
+    const isStudentToken = token.startsWith("demo-student-token");
+    const redirectTo = isStudentToken ? "/learn" : "/dashboard";
+    return NextResponse.redirect(new URL(redirectTo, request.url));
   }
 
   return NextResponse.next();
@@ -44,11 +49,14 @@ export const config = {
     "/students/:path*",
     "/learn/:path*",
     "/tutor/:path*",
+    "/review/:path*",
+    "/achievements/:path*",
     "/onboarding/:path*",
     "/diagnostic/:path*",
     "/skill-profile/:path*",
     "/admin/:path*",
     "/login",
     "/signup",
+    "/student-login",
   ],
 };

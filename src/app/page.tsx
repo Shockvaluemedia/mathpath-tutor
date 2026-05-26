@@ -16,6 +16,9 @@ export default function LandingPage() {
             <span className="text-lg font-semibold text-gray-900">MathPath Tutor</span>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/student-login">
+              <Button variant="ghost" size="sm">Student</Button>
+            </Link>
             <Link href="/login">
               <Button variant="ghost" size="sm">Log in</Button>
             </Link>
