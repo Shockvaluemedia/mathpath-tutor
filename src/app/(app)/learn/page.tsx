@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
+import { useXP } from "@/components/ui/xp-notification";
 import { BookOpen, Brain, Dumbbell, Rocket, MessageCircle, Sparkles, CheckCircle, PartyPopper, History } from "lucide-react";
 
 interface LessonSection {
@@ -31,6 +32,7 @@ interface Lesson {
 export default function LearnPage() {
   const router = useRouter();
   const { currentStudent, apiRequest } = useAuth();
+  const { awardXP } = useXP();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState(0);
@@ -74,12 +76,12 @@ export default function LearnPage() {
 
   const completeLesson = async () => {
     if (!lessonId || lessonId === "demo") {
+      awardXP(50, "Lesson complete!");
       setCompleted(true);
       return;
     }
 
     try {
-      // Collect all answers from all sections
       const allResponses = Object.values(sectionAnswers).flat();
       await apiRequest("/api/lessons/complete", {
         method: "POST",
@@ -89,6 +91,14 @@ export default function LearnPage() {
           responses: allResponses,
         }),
       });
+
+      // Award XP
+      awardXP(50, "Lesson complete!");
+      const correctCount = allResponses.filter((r) => r.isCorrect).length;
+      if (correctCount === allResponses.length && allResponses.length > 0) {
+        awardXP(25, "Perfect lesson!");
+      }
+
       setCompleted(true);
     } catch (err) {
       console.error("Complete lesson error:", err);
@@ -97,13 +107,14 @@ export default function LearnPage() {
   };
 
   const recordAnswer = (sectionKey: string, questionIndex: number, answer: string, correctAnswer: string) => {
+    const isCorrect = answer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+    if (isCorrect) {
+      awardXP(10, "Correct answer!");
+    }
     setSectionAnswers((prev) => {
       const sectionData = prev[sectionKey] || [];
       const updated = [...sectionData];
-      updated[questionIndex] = {
-        answer,
-        isCorrect: answer.trim().toLowerCase() === correctAnswer.trim().toLowerCase(),
-      };
+      updated[questionIndex] = { answer, isCorrect };
       return { ...prev, [sectionKey]: updated };
     });
   };

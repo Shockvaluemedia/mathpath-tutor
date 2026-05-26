@@ -443,3 +443,47 @@ export function getDemoTutorResponse(message: string): { response: string; metad
     metadata: { frustrationDetected: false, encouragement: true, hintGiven: false },
   };
 }
+
+export const DEMO_GAMIFICATION = {
+  "demo-student-1": {
+    xp: 685,
+    streak: 4,
+    longestStreak: 7,
+    totalLessons: 12,
+    totalCorrect: 78,
+    totalQuestions: 95,
+    perfectLessons: 2,
+    tutorSessions: 5,
+    hintsUsed: 8,
+    diagnosticDone: true,
+    badges: [
+      { id: "first-lesson", name: "First Steps", description: "Completed first lesson", icon: "👣", category: "effort", earnedAt: "2025-01-16T00:00:00Z" },
+      { id: "diagnostic-done", name: "Self Aware", description: "Completed diagnostic assessment", icon: "🔬", category: "milestone", earnedAt: "2025-01-15T00:00:00Z" },
+      { id: "streak-3", name: "Getting Started", description: "3-day streak", icon: "🔥", category: "streak", earnedAt: "2025-01-18T00:00:00Z" },
+      { id: "first-mastery", name: "First Mastery", description: "Mastered your first skill", icon: "✅", category: "mastery", earnedAt: "2025-01-20T00:00:00Z" },
+      { id: "mastery-5", name: "Skill Collector", description: "Mastered 5 skills", icon: "🎯", category: "mastery", earnedAt: "2025-02-01T00:00:00Z" },
+      { id: "lessons-10", name: "Dedicated Learner", description: "Completed 10 lessons", icon: "📖", category: "effort", earnedAt: "2025-02-05T00:00:00Z" },
+      { id: "tutor-chat", name: "Help Seeker", description: "Used the tutor for the first time", icon: "💬", category: "effort", earnedAt: "2025-01-17T00:00:00Z" },
+      { id: "asked-hint", name: "Smart Strategy", description: "Used a hint (asking for help is smart!)", icon: "💡", category: "effort", earnedAt: "2025-01-16T00:00:00Z" },
+    ],
+  },
+  "demo-student-2": {
+    xp: 320,
+    streak: 1,
+    longestStreak: 3,
+    totalLessons: 6,
+    totalCorrect: 35,
+    totalQuestions: 52,
+    perfectLessons: 0,
+    tutorSessions: 8,
+    hintsUsed: 15,
+    diagnosticDone: true,
+    badges: [
+      { id: "first-lesson", name: "First Steps", description: "Completed first lesson", icon: "👣", category: "effort", earnedAt: "2025-01-16T00:00:00Z" },
+      { id: "diagnostic-done", name: "Self Aware", description: "Completed diagnostic assessment", icon: "🔬", category: "milestone", earnedAt: "2025-01-15T00:00:00Z" },
+      { id: "streak-3", name: "Getting Started", description: "3-day streak", icon: "🔥", category: "streak", earnedAt: "2025-01-20T00:00:00Z" },
+      { id: "tutor-chat", name: "Help Seeker", description: "Used the tutor for the first time", icon: "💬", category: "effort", earnedAt: "2025-01-16T00:00:00Z" },
+      { id: "asked-hint", name: "Smart Strategy", description: "Used a hint (asking for help is smart!)", icon: "💡", category: "effort", earnedAt: "2025-01-16T00:00:00Z" },
+    ],
+  },
+};

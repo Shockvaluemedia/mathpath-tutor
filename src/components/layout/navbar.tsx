@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StudentSwitcher } from "@/components/layout/student-switcher";
-import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History } from "lucide-react";
+import { XPBar } from "@/components/layout/xp-bar";
+import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -27,8 +28,9 @@ export function Navbar() {
       ]
     : [
         { href: "/learn", label: "Learn", icon: BookOpen },
-        { href: "/learn/history", label: "History", icon: History },
         { href: "/tutor", label: "Tutor", icon: MessageCircle },
+        { href: "/achievements", label: "Achievements", icon: Trophy },
+        { href: "/learn/history", label: "History", icon: History },
       ];
 
   return (
@@ -65,6 +67,7 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <XPBar />
             <StudentSwitcher />
             <span className="text-sm text-gray-500">Hi, {user.name}</span>
             <Button variant="ghost" size="sm" onClick={logout}>
