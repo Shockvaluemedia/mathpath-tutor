@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useXP } from "@/components/ui/xp-notification";
+import { Confetti } from "@/components/ui/confetti";
 import { BookOpen, Brain, Dumbbell, Rocket, MessageCircle, Sparkles, CheckCircle, PartyPopper, History } from "lucide-react";
 
 interface LessonSection {
@@ -122,9 +123,10 @@ export default function LearnPage() {
   if (completed) {
     return (
       <div className="max-w-3xl mx-auto py-12 px-4 text-center">
-        <Card>
+        <Confetti active={completed} />
+        <Card className="animate-scale-in">
           <CardContent className="py-12">
-            <PartyPopper className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+            <PartyPopper className="h-16 w-16 text-amber-500 mx-auto mb-4 animate-confetti-pop" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Lesson Complete! 🎉</h2>
             <p className="text-gray-600 mb-6">
               Great work, {currentStudent?.name}! You finished today&apos;s lesson.
