@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARENT
+  STUDENT
+  ADMIN
+}
+
+enum GradeBand {
+  EARLY_ELEMENTARY
+  ELEMENTARY
+  MIDDLE_SCHOOL
+  HIGH_SCHOOL
+}
+
+enum MasteryStatus {
+  NOT_STARTED
+  DEVELOPING
+  PRACTICING
+  MASTERED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  students Student[]
+
+  @@map("users")
+}
+
+model Student {
+  id                  String    @id @default(uuid())
+  parentUserId        String    @map("parent_user_id")
+  name                String
+  age                 Int
+  grade               Int
+  gradeBand           GradeBand @map("grade_band")
+  confidenceLevel     Int       @default(5) @map("confidence_level")
+  learningPreferences Json      @default("{}") @map("learning_preferences")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  parent              User                @relation(fields: [parentUserId], references: [id])
+  assessments         Assessment[]
+  assessmentResponses AssessmentResponse[]
+  skillMastery        StudentSkillMastery[]
+  lessons             Lesson[]
+  tutorSessions       TutorSession[]
+  parentReports       ParentReport[]
+
+  @@map("students")
+}
+
+model Skill {
+  id            String   @id @default(uuid())
+  name          String
+  domain        String
+  gradeMin      Int      @map("grade_min")
+  gradeMax      Int      @map("grade_max")
+  prerequisites String[] @default([])
+  description   String
+
+  assessmentResponses AssessmentResponse[]
+  skillMastery        StudentSkillMastery[]
+  lessons             Lesson[]
+
+  @@map("skills")
+}
+
+model Assessment {
+  id             String    @id @default(uuid())
+  studentId      String    @map("student_id")
+  assessmentType String    @map("assessment_type")
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  estimatedLevel String?   @map("estimated_level")
+  summary        Json?
+
+  student   Student              @relation(fields: [studentId], references: [id])
+  responses AssessmentResponse[]
+
+  @@map("assessments")
+}
+
+model AssessmentResponse {
+  id               String   @id @default(uuid())
+  assessmentId     String   @map("assessment_id")
+  studentId        String   @map("student_id")
+  skillId          String   @map("skill_id")
+  question         String
+  studentAnswer    String   @map("student_answer")
+  correctAnswer    String   @map("correct_answer")
+  isCorrect        Boolean  @map("is_correct")
+  timeSpent        Int      @map("time_spent")
+  hintsUsed        Int      @default(0) @map("hints_used")
+  confidenceRating Int      @default(5) @map("confidence_rating")
+  mistakeType      String?  @map("mistake_type")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id])
+  skill      Skill      @relation(fields: [skillId], references: [id])
+
+  @@map("assessment_responses")
+}
+
+model StudentSkillMastery {
+  id              String        @id @default(uuid())
+  studentId       String        @map("student_id")
+  skillId         String        @map("skill_id")
+  masteryScore    Float         @default(0) @map("mastery_score")
+  confidenceScore Float         @default(0) @map("confidence_score")
+  status          MasteryStatus @default(NOT_STARTED)
+  lastPracticed   DateTime?     @map("last_practiced")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+  skill   Skill   @relation(fields: [skillId], references: [id])
+
+  @@unique([studentId, skillId])
+  @@map("student_skill_mastery")
+}
+
+model Lesson {
+  id           String    @id @default(uuid())
+  studentId    String    @map("student_id")
+  title        String
+  focusSkillId String    @map("focus_skill_id")
+  gradeBand    GradeBand @map("grade_band")
+  lessonJson   Json      @map("lesson_json")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  student      Student       @relation(fields: [studentId], references: [id])
+  focusSkill   Skill         @relation(fields: [focusSkillId], references: [id])
+  tutorSessions TutorSession[]
+
+  @@map("lessons")
+}
+
+model TutorSession {
+  id                  String   @id @default(uuid())
+  studentId           String   @map("student_id")
+  lessonId            String?  @map("lesson_id")
+  messages            Json     @default("[]")
+  frustrationDetected Boolean  @default(false) @map("frustration_detected")
+  summary             String?
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+  lesson  Lesson? @relation(fields: [lessonId], references: [id])
+
+  @@map("tutor_sessions")
+}
+
+model ParentReport {
+  id                   String   @id @default(uuid())
+  studentId            String   @map("student_id")
+  weekStart            DateTime @map("week_start")
+  weekEnd              DateTime @map("week_end")
+  strengths            Json     @default("[]")
+  weaknesses           Json     @default("[]")
+  progressSummary      String   @map("progress_summary")
+  recommendedNextSteps Json     @default("[]") @map("recommended_next_steps")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@map("parent_reports")
+}
