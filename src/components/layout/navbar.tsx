@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StudentSwitcher } from "@/components/layout/student-switcher";
 import { XPBar } from "@/components/layout/xp-bar";
-import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy, RotateCcw, CreditCard, BarChart3 } from "lucide-react";
+import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy, RotateCcw, CreditCard, BarChart3, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -30,6 +30,7 @@ export function Navbar() {
         { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
       ]
     : [
+        { href: "/domains", label: "Domains", icon: Compass },
         { href: "/learn", label: "Learn", icon: BookOpen },
         { href: "/review", label: "Review", icon: RotateCcw },
         { href: "/tutor", label: "Tutor", icon: MessageCircle },
