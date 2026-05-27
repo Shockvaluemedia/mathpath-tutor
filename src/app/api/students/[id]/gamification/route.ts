@@ -12,7 +12,14 @@ export async function GET(
     if (DEMO_MODE) {
       const data = (DEMO_GAMIFICATION as any)[studentId];
       if (!data) {
-        return NextResponse.json({ error: "Student not found" }, { status: 404 });
+        // Return starter stats for new students
+        const levelInfo = calculateLevel(0);
+        const stats: PlayerStats = {
+          xp: 0, level: levelInfo.level, levelName: `${levelInfo.emoji} ${levelInfo.name}`,
+          xpToNextLevel: levelInfo.xpToNext, xpProgress: levelInfo.progress,
+          streak: 0, longestStreak: 0, badges: [], totalLessons: 0, totalCorrect: 0, totalQuestions: 0,
+        };
+        return NextResponse.json(stats);
       }
 
       const levelInfo = calculateLevel(data.xp);

@@ -11,7 +11,14 @@ export async function GET(
     if (DEMO_MODE) {
       const progress = (DEMO_PROGRESS as any)[studentId];
       if (!progress) {
-        return NextResponse.json({ error: "Student not found" }, { status: 404 });
+        // Return empty progress for newly created students
+        return NextResponse.json({
+          student: { id: studentId, name: "Learner", age: 10, grade: 5, gradeBand: "ELEMENTARY", confidenceLevel: 5 },
+          stats: { lessonsCompletedThisWeek: 0, totalLessons: 0, timeSpentMinutes: 0, masteredSkillsCount: 0, avgConfidence: 5, confidenceTrend: "stable", tutorSessionsThisWeek: 0 },
+          skills: { mastered: [], developing: [], weak: [] },
+          recentLessons: [],
+          latestReport: null,
+        });
       }
       return NextResponse.json(progress);
     }
