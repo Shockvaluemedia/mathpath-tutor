@@ -1,173 +1,260 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Link2, BookOpen, Brain } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useToast } from "@/components/ui/toast";
+import { Plus, Search, Pencil, Trash2, Brain, Link2 } from "lucide-react";
 
-const SKILL_MAP = {
-  EARLY_ELEMENTARY: [
-    { id: "1", name: "Counting to 20", domain: "Number Sense", prerequisites: [], gradeMin: 0, gradeMax: 1 },
-    { id: "2", name: "Number Recognition", domain: "Number Sense", prerequisites: ["1"], gradeMin: 0, gradeMax: 1 },
-    { id: "3", name: "Addition (single digit)", domain: "Operations", prerequisites: ["1", "2"], gradeMin: 0, gradeMax: 2 },
-    { id: "4", name: "Subtraction (single digit)", domain: "Operations", prerequisites: ["1", "2"], gradeMin: 0, gradeMax: 2 },
-    { id: "5", name: "Patterns", domain: "Algebra Readiness", prerequisites: ["1"], gradeMin: 0, gradeMax: 2 },
-    { id: "6", name: "Shapes", domain: "Geometry", prerequisites: [], gradeMin: 0, gradeMax: 2 },
-    { id: "7", name: "Comparing Numbers", domain: "Number Sense", prerequisites: ["1", "2"], gradeMin: 0, gradeMax: 2 },
-  ],
-  ELEMENTARY: [
-    { id: "8", name: "Multiplication", domain: "Operations", prerequisites: ["3"], gradeMin: 3, gradeMax: 5 },
-    { id: "9", name: "Division", domain: "Operations", prerequisites: ["8"], gradeMin: 3, gradeMax: 5 },
-    { id: "10", name: "Fractions", domain: "Number Sense", prerequisites: ["9"], gradeMin: 3, gradeMax: 5 },
-    { id: "11", name: "Decimals", domain: "Number Sense", prerequisites: ["10"], gradeMin: 4, gradeMax: 5 },
-    { id: "12", name: "Word Problems", domain: "Problem Solving", prerequisites: ["8", "9"], gradeMin: 3, gradeMax: 5 },
-    { id: "13", name: "Place Value", domain: "Number Sense", prerequisites: ["2"], gradeMin: 3, gradeMax: 5 },
-    { id: "14", name: "Measurement", domain: "Measurement", prerequisites: ["8"], gradeMin: 3, gradeMax: 5 },
-  ],
-  MIDDLE_SCHOOL: [
-    { id: "15", name: "Pre-Algebra", domain: "Algebra", prerequisites: ["8", "9", "10"], gradeMin: 6, gradeMax: 8 },
-    { id: "16", name: "Ratios & Proportions", domain: "Ratios", prerequisites: ["10", "11"], gradeMin: 6, gradeMax: 7 },
-    { id: "17", name: "Integers", domain: "Number Sense", prerequisites: ["4"], gradeMin: 6, gradeMax: 7 },
-    { id: "18", name: "Expressions", domain: "Algebra", prerequisites: ["15"], gradeMin: 6, gradeMax: 8 },
-    { id: "19", name: "Equations", domain: "Algebra", prerequisites: ["18"], gradeMin: 7, gradeMax: 8 },
-    { id: "20", name: "Percentages", domain: "Ratios", prerequisites: ["10", "11"], gradeMin: 6, gradeMax: 7 },
-    { id: "21", name: "Coordinate Plane", domain: "Geometry", prerequisites: ["17"], gradeMin: 6, gradeMax: 8 },
-  ],
-  HIGH_SCHOOL: [
-    { id: "22", name: "Linear Equations", domain: "Algebra", prerequisites: ["19"], gradeMin: 9, gradeMax: 10 },
-    { id: "23", name: "Quadratics", domain: "Algebra", prerequisites: ["22"], gradeMin: 9, gradeMax: 10 },
-    { id: "24", name: "Functions", domain: "Algebra", prerequisites: ["22"], gradeMin: 9, gradeMax: 11 },
-    { id: "25", name: "Geometry Proofs", domain: "Geometry", prerequisites: ["21"], gradeMin: 9, gradeMax: 10 },
-    { id: "26", name: "Trigonometry", domain: "Geometry", prerequisites: ["25"], gradeMin: 10, gradeMax: 11 },
-    { id: "27", name: "Statistics", domain: "Data", prerequisites: ["16"], gradeMin: 9, gradeMax: 12 },
-    { id: "28", name: "Probability", domain: "Data", prerequisites: ["10", "16"], gradeMin: 9, gradeMax: 12 },
-  ],
-};
+interface Skill {
+  id: string;
+  name: string;
+  domain: string;
+  gradeMin: number;
+  gradeMax: number;
+  prerequisites: string[];
+  description: string;
+}
 
 export default function AdminSkillsPage() {
+  const { apiRequest } = useAuth();
+  const { toast } = useToast();
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedTab, setSelectedTab] = useState("EARLY_ELEMENTARY");
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [form, setForm] = useState({ name: "", domain: "", gradeMin: 0, gradeMax: 2, prerequisites: "", description: "" });
 
-  const allSkills = Object.values(SKILL_MAP).flat();
-  const filteredSkills = search
-    ? allSkills.filter(
-        (s) =>
-          s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.domain.toLowerCase().includes(search.toLowerCase())
-      )
-    : (SKILL_MAP as any)[selectedTab] || [];
+  useEffect(() => {
+    loadSkills();
+  }, []);
+
+  const loadSkills = async () => {
+    try {
+      const data = await apiRequest("/api/admin/skills");
+      setSkills(data.skills || []);
+    } catch {
+      // Fallback
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openCreate = () => {
+    setEditingSkill(null);
+    setForm({ name: "", domain: "", gradeMin: 0, gradeMax: 2, prerequisites: "", description: "" });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (skill: Skill) => {
+    setEditingSkill(skill);
+    setForm({
+      name: skill.name,
+      domain: skill.domain,
+      gradeMin: skill.gradeMin,
+      gradeMax: skill.gradeMax,
+      prerequisites: skill.prerequisites.join(", "),
+      description: skill.description,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    const payload = {
+      name: form.name,
+      domain: form.domain,
+      gradeMin: Number(form.gradeMin),
+      gradeMax: Number(form.gradeMax),
+      prerequisites: form.prerequisites ? form.prerequisites.split(",").map((s) => s.trim()) : [],
+      description: form.description,
+    };
+
+    try {
+      if (editingSkill) {
+        await apiRequest(`/api/admin/skills/${editingSkill.id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        setSkills((prev) => prev.map((s) => (s.id === editingSkill.id ? { ...s, ...payload } : s)));
+        toast("success", "Skill updated");
+      } else {
+        const data = await apiRequest("/api/admin/skills", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        setSkills((prev) => [...prev, data.skill]);
+        toast("success", "Skill created");
+      }
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast("error", err.message || "Failed to save");
+    }
+  };
+
+  const handleDelete = async (skill: Skill) => {
+    if (!confirm(`Delete "${skill.name}"? This cannot be undone.`)) return;
+    try {
+      await apiRequest(`/api/admin/skills/${skill.id}`, { method: "DELETE" });
+      setSkills((prev) => prev.filter((s) => s.id !== skill.id));
+      toast("success", "Skill deleted");
+    } catch (err: any) {
+      toast("error", err.message || "Failed to delete");
+    }
+  };
+
+  const filteredSkills = skills.filter((s) => {
+    const matchesSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.domain.toLowerCase().includes(search.toLowerCase());
+    const matchesTab = selectedTab === "all" ||
+      (selectedTab === "K-2" && s.gradeMax <= 2) ||
+      (selectedTab === "3-5" && s.gradeMin >= 3 && s.gradeMax <= 5) ||
+      (selectedTab === "6-8" && s.gradeMin >= 6 && s.gradeMax <= 8) ||
+      (selectedTab === "9-12" && s.gradeMin >= 9);
+    return matchesSearch && matchesTab;
+  });
+
+  const domains = [...new Set(skills.map((s) => s.domain))].sort();
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Skill Map</h1>
-          <p className="text-gray-500">Manage skills, prerequisites, and grade bands</p>
+          <p className="text-sm text-gray-500">{skills.length} skills across {domains.length} domains</p>
         </div>
-        <Button>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Add Skill
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search skills..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Tabs by grade band */}
-      {!search && (
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="EARLY_ELEMENTARY">K-2</TabsTrigger>
-            <TabsTrigger value="ELEMENTARY">3-5</TabsTrigger>
-            <TabsTrigger value="MIDDLE_SCHOOL">6-8</TabsTrigger>
-            <TabsTrigger value="HIGH_SCHOOL">9-12</TabsTrigger>
+      {/* Search + Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search skills or domains..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="K-2">K-2</TabsTrigger>
+            <TabsTrigger value="3-5">3-5</TabsTrigger>
+            <TabsTrigger value="6-8">6-8</TabsTrigger>
+            <TabsTrigger value="9-12">9-12</TabsTrigger>
           </TabsList>
         </Tabs>
-      )}
+      </div>
 
       {/* Skills Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {filteredSkills.map((skill: any) => (
-          <Card key={skill.id} className="hover:shadow-sm transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-indigo-500" />
-                  <h3 className="font-medium text-gray-900">{skill.name}</h3>
+      {loading ? (
+        <div className="grid md:grid-cols-2 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : filteredSkills.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600">No skills found. {search ? "Try a different search." : "Add your first skill."}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4 stagger-children">
+          {filteredSkills.map((skill) => (
+            <Card key={skill.id} className="group hover:shadow-sm transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Brain className="h-4 w-4 text-indigo-500 shrink-0" />
+                      <h3 className="font-medium text-gray-900 truncate">{skill.name}</h3>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">{skill.description}</p>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <Badge variant="outline" className="text-xs">{skill.domain}</Badge>
+                      <span>Grades {skill.gradeMin}–{skill.gradeMax}</span>
+                      {skill.prerequisites.length > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Link2 className="h-3 w-3" />
+                          {skill.prerequisites.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(skill)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => handleDelete(skill)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {skill.domain}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <span>Grades {skill.gradeMin}–{skill.gradeMax}</span>
-                {skill.prerequisites.length > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Link2 className="h-3 w-3" />
-                    {skill.prerequisites.length} prerequisite{skill.prerequisites.length > 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-              {skill.prerequisites.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {skill.prerequisites.map((preId: string) => {
-                    const pre = allSkills.find((s) => s.id === preId);
-                    return pre ? (
-                      <Badge key={preId} variant="secondary" className="text-xs">
-                        {pre.name}
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {/* Stats */}
-      <Separator className="my-8" />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{allSkills.length}</p>
-            <p className="text-xs text-gray-500">Total Skills</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">4</p>
-            <p className="text-xs text-gray-500">Grade Bands</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">7</p>
-            <p className="text-xs text-gray-500">Domains</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">
-              {allSkills.reduce((sum, s) => sum + s.prerequisites.length, 0)}
-            </p>
-            <p className="text-xs text-gray-500">Prerequisites</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingSkill ? "Edit Skill" : "Add New Skill"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Skill Name</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g., Fractions" />
+            </div>
+            <div className="space-y-2">
+              <Label>Domain</Label>
+              <Input value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="e.g., Number Sense" list="domains" />
+              <datalist id="domains">
+                {domains.map((d) => <option key={d} value={d} />)}
+              </datalist>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Grade Min</Label>
+                <Input type="number" min={0} max={12} value={form.gradeMin} onChange={(e) => setForm({ ...form, gradeMin: Number(e.target.value) })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Grade Max</Label>
+                <Input type="number" min={0} max={12} value={form.gradeMax} onChange={(e) => setForm({ ...form, gradeMax: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Prerequisites (comma-separated IDs)</Label>
+              <Input value={form.prerequisites} onChange={(e) => setForm({ ...form, prerequisites: e.target.value })} placeholder="e.g., 1, 2, 3" />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What does this skill cover?" rows={2} />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">Cancel</Button>
+              <Button onClick={handleSave} disabled={!form.name || !form.domain} className="flex-1">
+                {editingSkill ? "Save Changes" : "Create Skill"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
