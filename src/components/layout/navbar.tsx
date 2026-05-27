@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StudentSwitcher } from "@/components/layout/student-switcher";
 import { XPBar } from "@/components/layout/xp-bar";
-import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy, RotateCcw } from "lucide-react";
+import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy, RotateCcw, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -20,6 +20,7 @@ export function Navbar() {
     ? [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/students", label: "Students", icon: Users },
+        { href: "/billing/plans", label: "Plans", icon: CreditCard },
       ]
     : user.role === "ADMIN"
     ? [
