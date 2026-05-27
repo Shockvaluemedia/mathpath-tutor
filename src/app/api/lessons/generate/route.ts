@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
     const { generateDailyLesson } = await import("@/lib/ai");
 
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
 
     const skillProfile = {
       estimatedLevel: student.assessments[0]?.estimatedLevel || `Grade ${student.grade}`,
-      gradeLevelComparison: "On track",
+      levelComparison: "On track",
       masteredSkills: student.skillMastery.filter((sm) => sm.status === "MASTERED").map((sm) => ({
         id: sm.skillId, name: sm.skill.name, domain: sm.skill.domain, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
       })),

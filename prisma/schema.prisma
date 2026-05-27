@@ -7,25 +7,105 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================
+// CORE ENUMS
+// ============================================================
+
 enum UserRole {
+  LEARNER
   PARENT
-  STUDENT
+  MENTOR
+  TEACHER
+  TUTOR
+  SCHOOL_ADMIN
+  ORG_ADMIN
+  FACILITATOR
   ADMIN
 }
 
-enum GradeBand {
-  EARLY_ELEMENTARY
+enum DevelopmentalStage {
+  EARLY_CHILDHOOD
   ELEMENTARY
-  MIDDLE_SCHOOL
+  MIDDLE
   HIGH_SCHOOL
+  ADULT
 }
 
 enum MasteryStatus {
   NOT_STARTED
+  EMERGING
   DEVELOPING
   PRACTICING
   MASTERED
 }
+
+enum InterventionType {
+  TUTORING
+  REMEDIATION
+  CONFIDENCE_RECOVERY
+  RESTORATIVE_COACHING
+  MENTORING
+  PARENT_ENGAGEMENT
+  WORKFORCE_PATHWAY
+}
+
+enum ContentType {
+  LESSON
+  VIDEO
+  QUIZ
+  PROJECT
+  REFLECTION
+  DISCUSSION
+  MENTORSHIP_PROMPT
+  RESTORATIVE_EXERCISE
+  PDF
+}
+
+enum EmotionalState {
+  CONFIDENT
+  ENGAGED
+  NEUTRAL
+  UNCERTAIN
+  FRUSTRATED
+  DISENGAGED
+  OVERWHELMED
+}
+
+// ============================================================
+// MULTI-TENANT: ORGANIZATIONS
+// ============================================================
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // family, school, nonprofit, church, community, afterschool
+  slug        String   @unique
+  settings    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  memberships OrganizationMembership[]
+
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           String   // org-specific role
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@map("organization_memberships")
+}
+
+// ============================================================
+// USERS & LEARNER PROFILES
+// ============================================================
 
 model User {
   id        String   @id @default(uuid())
@@ -33,63 +113,164 @@ model User {
   email     String   @unique
   password  String
   role      UserRole
+  planId    String   @default("free") @map("plan_id")
+  stripeCustomerId String? @map("stripe_customer_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  students Student[]
+  learners        Learner[]
+  memberships     OrganizationMembership[]
 
   @@map("users")
 }
 
-model Student {
-  id                  String    @id @default(uuid())
-  parentUserId        String    @map("parent_user_id")
+model Learner {
+  id                  String           @id @default(uuid())
+  guardianUserId      String           @map("guardian_user_id")
   name                String
   age                 Int
   grade               Int
-  gradeBand           GradeBand @map("grade_band")
-  confidenceLevel     Int       @default(5) @map("confidence_level")
-  learningPreferences Json      @default("{}") @map("learning_preferences")
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
+  developmentalStage  DevelopmentalStage @map("developmental_stage")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
 
-  parent              User                @relation(fields: [parentUserId], references: [id])
+  guardian            User             @relation(fields: [guardianUserId], references: [id])
+  profile             LearnerProfile?
+  enrollments         DomainEnrollment[]
   assessments         Assessment[]
   assessmentResponses AssessmentResponse[]
-  skillMastery        StudentSkillMastery[]
-  lessons             Lesson[]
-  tutorSessions       TutorSession[]
-  parentReports       ParentReport[]
+  skillMastery        LearnerSkillMastery[]
+  modules             LearningModule[]
+  sessions            TutoringSession[]
+  reports             ProgressReport[]
+  interventions       Intervention[]
+  emotionalLogs       EmotionalLog[]
 
-  @@map("students")
+  @@map("learners")
 }
 
-model Skill {
-  id            String   @id @default(uuid())
-  name          String
-  domain        String
-  gradeMin      Int      @map("grade_min")
-  gradeMax      Int      @map("grade_max")
-  prerequisites String[] @default([])
-  description   String
+model LearnerProfile {
+  id                    String   @id @default(uuid())
+  learnerId             String   @unique @map("learner_id")
+  confidenceLevel       Int      @default(5) @map("confidence_level")
+  learningPace          String   @default("moderate") @map("learning_pace")
+  preferredStyle        String   @default("visual") @map("preferred_style")
+  engagementPattern     String   @default("consistent") @map("engagement_pattern")
+  frustrationThreshold  Int      @default(5) @map("frustration_threshold")
+  retentionStrength     String   @default("moderate") @map("retention_strength")
+  strengths             Json     @default("[]")
+  challenges            Json     @default("[]")
+  preferences           Json     @default("{}")
+  interventionHistory   Json     @default("[]") @map("intervention_history")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
+  learner Learner @relation(fields: [learnerId], references: [id])
+
+  @@map("learner_profiles")
+}
+
+// ============================================================
+// SUBJECT DOMAIN SYSTEM
+// ============================================================
+
+model SubjectDomain {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String
+  icon        String   @default("📚")
+  color       String   @default("#6366f1")
+  isActive    Boolean  @default(true) @map("is_active")
+  config      Json     @default("{}") // domain-specific config (tutoring modes, etc.)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  skills      LearningSkill[]
+  enrollments DomainEnrollment[]
+  modules     LearningModule[]
+  assessments Assessment[]
+
+  @@map("subject_domains")
+}
+
+model DomainEnrollment {
+  id        String   @id @default(uuid())
+  learnerId String   @map("learner_id")
+  domainId  String   @map("domain_id")
+  startedAt DateTime @default(now()) @map("started_at")
+  status    String   @default("active")
+
+  learner Learner       @relation(fields: [learnerId], references: [id])
+  domain  SubjectDomain @relation(fields: [domainId], references: [id])
+
+  @@unique([learnerId, domainId])
+  @@map("domain_enrollments")
+}
+
+// ============================================================
+// SKILL GRAPH ENGINE
+// ============================================================
+
+model LearningSkill {
+  id                String           @id @default(uuid())
+  domainId          String           @map("domain_id")
+  name              String
+  slug              String
+  description       String
+  difficulty        Int              @default(1) // 1-10
+  stageMin          DevelopmentalStage @map("stage_min")
+  stageMax          DevelopmentalStage @map("stage_max")
+  gradeMin          Int              @map("grade_min")
+  gradeMax          Int              @map("grade_max")
+  masteryThreshold  Float            @default(80) @map("mastery_threshold")
+  prerequisites     String[]         @default([])
+  interventionRecs  Json             @default("[]") @map("intervention_recs")
+  metadata          Json             @default("{}")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  domain            SubjectDomain    @relation(fields: [domainId], references: [id])
   assessmentResponses AssessmentResponse[]
-  skillMastery        StudentSkillMastery[]
-  lessons             Lesson[]
+  mastery           LearnerSkillMastery[]
+  modules           LearningModule[]
 
-  @@map("skills")
+  @@unique([domainId, slug])
+  @@map("learning_skills")
 }
+
+model LearnerSkillMastery {
+  id              String        @id @default(uuid())
+  learnerId       String        @map("learner_id")
+  skillId         String        @map("skill_id")
+  masteryScore    Float         @default(0) @map("mastery_score")
+  confidenceScore Float         @default(0) @map("confidence_score")
+  status          MasteryStatus @default(NOT_STARTED)
+  attempts        Int           @default(0)
+  lastPracticed   DateTime?     @map("last_practiced")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  learner Learner       @relation(fields: [learnerId], references: [id])
+  skill   LearningSkill @relation(fields: [skillId], references: [id])
+
+  @@unique([learnerId, skillId])
+  @@map("learner_skill_mastery")
+}
+
+// ============================================================
+// ASSESSMENT ENGINE
+// ============================================================
 
 model Assessment {
   id             String    @id @default(uuid())
-  studentId      String    @map("student_id")
-  assessmentType String    @map("assessment_type")
+  learnerId      String    @map("learner_id")
+  domainId       String    @map("domain_id")
+  assessmentType String    @map("assessment_type") // diagnostic, formative, summative, review
   startedAt      DateTime  @default(now()) @map("started_at")
   completedAt    DateTime? @map("completed_at")
   estimatedLevel String?   @map("estimated_level")
   summary        Json?
+  metadata       Json      @default("{}")
 
-  student   Student              @relation(fields: [studentId], references: [id])
+  learner   Learner              @relation(fields: [learnerId], references: [id])
+  domain    SubjectDomain        @relation(fields: [domainId], references: [id])
   responses AssessmentResponse[]
 
   @@map("assessments")
@@ -98,86 +279,125 @@ model Assessment {
 model AssessmentResponse {
   id               String   @id @default(uuid())
   assessmentId     String   @map("assessment_id")
-  studentId        String   @map("student_id")
+  learnerId        String   @map("learner_id")
   skillId          String   @map("skill_id")
   question         String
-  studentAnswer    String   @map("student_answer")
+  learnerAnswer    String   @map("learner_answer")
   correctAnswer    String   @map("correct_answer")
   isCorrect        Boolean  @map("is_correct")
   timeSpent        Int      @map("time_spent")
   hintsUsed        Int      @default(0) @map("hints_used")
   confidenceRating Int      @default(5) @map("confidence_rating")
   mistakeType      String?  @map("mistake_type")
+  emotionalState   EmotionalState? @map("emotional_state")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  assessment Assessment @relation(fields: [assessmentId], references: [id])
-  student    Student    @relation(fields: [studentId], references: [id])
-  skill      Skill      @relation(fields: [skillId], references: [id])
+  assessment Assessment    @relation(fields: [assessmentId], references: [id])
+  learner    Learner       @relation(fields: [learnerId], references: [id])
+  skill      LearningSkill @relation(fields: [skillId], references: [id])
 
   @@map("assessment_responses")
 }
 
-model StudentSkillMastery {
-  id              String        @id @default(uuid())
-  studentId       String        @map("student_id")
-  skillId         String        @map("skill_id")
-  masteryScore    Float         @default(0) @map("mastery_score")
-  confidenceScore Float         @default(0) @map("confidence_score")
-  status          MasteryStatus @default(NOT_STARTED)
-  lastPracticed   DateTime?     @map("last_practiced")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+// ============================================================
+// LEARNING MODULE / CONTENT ENGINE
+// ============================================================
 
-  student Student @relation(fields: [studentId], references: [id])
-  skill   Skill   @relation(fields: [skillId], references: [id])
-
-  @@unique([studentId, skillId])
-  @@map("student_skill_mastery")
-}
-
-model Lesson {
-  id           String    @id @default(uuid())
-  studentId    String    @map("student_id")
+model LearningModule {
+  id           String      @id @default(uuid())
+  learnerId    String      @map("learner_id")
+  domainId     String      @map("domain_id")
+  skillId      String      @map("skill_id")
   title        String
-  focusSkillId String    @map("focus_skill_id")
-  gradeBand    GradeBand @map("grade_band")
-  lessonJson   Json      @map("lesson_json")
-  completedAt  DateTime? @map("completed_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  contentType  ContentType @map("content_type")
+  stage        DevelopmentalStage
+  content      Json        // flexible content structure per type
+  completedAt  DateTime?   @map("completed_at")
+  score        Float?      // 0-100 if applicable
+  createdAt    DateTime    @default(now()) @map("created_at")
 
-  student      Student       @relation(fields: [studentId], references: [id])
-  focusSkill   Skill         @relation(fields: [focusSkillId], references: [id])
-  tutorSessions TutorSession[]
+  learner  Learner       @relation(fields: [learnerId], references: [id])
+  domain   SubjectDomain @relation(fields: [domainId], references: [id])
+  skill    LearningSkill @relation(fields: [skillId], references: [id])
+  sessions TutoringSession[]
 
-  @@map("lessons")
+  @@map("learning_modules")
 }
 
-model TutorSession {
-  id                  String   @id @default(uuid())
-  studentId           String   @map("student_id")
-  lessonId            String?  @map("lesson_id")
-  messages            Json     @default("[]")
-  frustrationDetected Boolean  @default(false) @map("frustration_detected")
+// ============================================================
+// TUTORING / COACHING ENGINE
+// ============================================================
+
+model TutoringSession {
+  id                  String        @id @default(uuid())
+  learnerId           String        @map("learner_id")
+  moduleId            String?       @map("module_id")
+  sessionType         String        @default("tutoring") @map("session_type") // tutoring, mentoring, coaching, restorative
+  messages            Json          @default("[]")
+  frustrationDetected Boolean       @default(false) @map("frustration_detected")
+  emotionalArc        Json          @default("[]") @map("emotional_arc")
   summary             String?
-  createdAt           DateTime @default(now()) @map("created_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
 
-  student Student @relation(fields: [studentId], references: [id])
-  lesson  Lesson? @relation(fields: [lessonId], references: [id])
+  learner Learner        @relation(fields: [learnerId], references: [id])
+  module  LearningModule? @relation(fields: [moduleId], references: [id])
 
-  @@map("tutor_sessions")
+  @@map("tutoring_sessions")
 }
 
-model ParentReport {
+// ============================================================
+// INTERVENTION ENGINE
+// ============================================================
+
+model Intervention {
+  id              String           @id @default(uuid())
+  learnerId       String           @map("learner_id")
+  type            InterventionType
+  reason          String
+  plan            Json             @default("{}")
+  status          String           @default("active") // active, completed, paused
+  startedAt       DateTime         @default(now()) @map("started_at")
+  completedAt     DateTime?        @map("completed_at")
+  outcomes        Json             @default("{}")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  learner Learner @relation(fields: [learnerId], references: [id])
+
+  @@map("interventions")
+}
+
+// ============================================================
+// SOCIAL EMOTIONAL LEARNING (SEL) LAYER
+// ============================================================
+
+model EmotionalLog {
+  id           String         @id @default(uuid())
+  learnerId    String         @map("learner_id")
+  state        EmotionalState
+  trigger      String?        // what caused this state
+  context      String?        // lesson, tutor, assessment, etc.
+  intensity    Int            @default(5) // 1-10
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  learner Learner @relation(fields: [learnerId], references: [id])
+
+  @@map("emotional_logs")
+}
+
+// ============================================================
+// PROGRESS REPORTS & ANALYTICS
+// ============================================================
+
+model ProgressReport {
   id                   String   @id @default(uuid())
-  studentId            String   @map("student_id")
-  weekStart            DateTime @map("week_start")
-  weekEnd              DateTime @map("week_end")
-  strengths            Json     @default("[]")
-  weaknesses           Json     @default("[]")
-  progressSummary      String   @map("progress_summary")
-  recommendedNextSteps Json     @default("[]") @map("recommended_next_steps")
+  learnerId            String   @map("learner_id")
+  reportType           String   @map("report_type") // weekly, monthly, intervention, impact
+  periodStart          DateTime @map("period_start")
+  periodEnd            DateTime @map("period_end")
+  data                 Json     @default("{}")
   createdAt            DateTime @default(now()) @map("created_at")
 
-  student Student @relation(fields: [studentId], references: [id])
+  learner Learner @relation(fields: [learnerId], references: [id])
 
-  @@map("parent_reports")
+  @@map("progress_reports")
 }

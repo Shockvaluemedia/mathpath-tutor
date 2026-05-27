@@ -35,7 +35,7 @@ export async function GET(
     }
 
     // Production: calculate from database
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
 
     const token = getTokenFromHeader(request.headers.get("authorization"));

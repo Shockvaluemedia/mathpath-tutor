@@ -12,7 +12,7 @@ export async function tutorChat(
   message: string,
   context: TutorContext
 ): Promise<{ response: string; metadata: { frustrationDetected: boolean; encouragement: boolean; hintGiven: boolean } }> {
-  const gradeBandPrompt = getSystemPromptForGradeBand(context.studentProfile.gradeBand);
+  const gradeBandPrompt = getSystemPromptForGradeBand(context.studentProfile.gradeBand || context.studentProfile.developmentalStage || "ELEMENTARY");
 
   const systemPrompt = `${gradeBandPrompt}
 

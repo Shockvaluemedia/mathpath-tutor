@@ -38,17 +38,17 @@ export const XP_REWARDS = {
 
 // Level thresholds
 const LEVELS = [
-  { xp: 0, name: "Math Beginner", emoji: "🌱" },
-  { xp: 100, name: "Number Explorer", emoji: "🔍" },
+  { xp: 0, name: "Beginner", emoji: "🌱" },
+  { xp: 100, name: "Explorer", emoji: "🔍" },
   { xp: 300, name: "Problem Solver", emoji: "🧩" },
-  { xp: 600, name: "Math Adventurer", emoji: "🗺️" },
+  { xp: 600, name: "Adventurer", emoji: "🗺️" },
   { xp: 1000, name: "Skill Builder", emoji: "🔨" },
-  { xp: 1500, name: "Math Warrior", emoji: "⚔️" },
+  { xp: 1500, name: "Warrior", emoji: "⚔️" },
   { xp: 2200, name: "Knowledge Seeker", emoji: "📚" },
-  { xp: 3000, name: "Math Champion", emoji: "🏆" },
+  { xp: 3000, name: "Champion", emoji: "🏆" },
   { xp: 4000, name: "Master Mind", emoji: "🧠" },
-  { xp: 5500, name: "Math Legend", emoji: "⭐" },
-  { xp: 7500, name: "Math Wizard", emoji: "🧙" },
+  { xp: 5500, name: "Legend", emoji: "⭐" },
+  { xp: 7500, name: "Wizard", emoji: "🧙" },
   { xp: 10000, name: "Grand Master", emoji: "👑" },
 ];
 

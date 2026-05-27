@@ -28,7 +28,7 @@ export async function GET() {
     return NextResponse.json({ skills: demoSkills });
   }
 
-  const { prisma } = await import("@/lib/db");
+  const { db: prisma } = await import("@/lib/db");
   const skills = await prisma.skill.findMany({ orderBy: [{ gradeMin: "asc" }, { name: "asc" }] });
   return NextResponse.json({ skills });
 }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ skill: newSkill });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const skill = await prisma.skill.create({
       data: { name, domain, gradeMin, gradeMax, prerequisites: prerequisites || [], description: description || "" },
     });

@@ -41,7 +41,7 @@ export async function GET() {
       });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -79,7 +79,7 @@ export async function GET() {
         avgConfidence: Math.round((skillMasteryData._avg.confidenceScore || 0) * 10) / 10,
         activeThisWeek,
       },
-      gradeBandDistribution: gradeBandDistribution.map((g) => ({
+      gradeBandDistribution: gradeBandDistribution.map((g: any) => ({
         band: g.gradeBand,
         count: g._count,
       })),

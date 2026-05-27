@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production: use database
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyPassword, generateToken } = await import("@/lib/auth");
 
     const user = await prisma.user.findUnique({ where: { email } });

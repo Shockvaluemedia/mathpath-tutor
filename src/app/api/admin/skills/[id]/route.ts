@@ -18,7 +18,7 @@ export async function PUT(
       });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const skill = await prisma.skill.update({
       where: { id },
       data: {
@@ -49,7 +49,7 @@ export async function DELETE(
       return NextResponse.json({ success: true });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     await prisma.skill.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

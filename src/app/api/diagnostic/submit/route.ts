@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
     const { evaluateResponse } = await import("@/lib/ai");
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const student = await prisma.student.findUnique({ where: { id: studentId } });
     if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-    const evaluations = [];
+    const evaluations: any[] = [];
     for (const response of responses) {
       const evaluation = await evaluateResponse(response, student.age, student.gradeBand);
       await prisma.assessmentResponse.create({

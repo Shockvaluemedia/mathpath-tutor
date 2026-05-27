@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
 
     const now = new Date();
     const today = now.getDay(); // 0=Sun, 1=Mon...

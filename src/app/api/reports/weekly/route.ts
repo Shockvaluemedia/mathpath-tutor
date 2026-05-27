@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
     const { generateParentReport } = await import("@/lib/ai");
 

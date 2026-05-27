@@ -14,7 +14,7 @@ export async function GET() {
   // Check database connectivity (skip in demo mode)
   if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
     try {
-      const { prisma } = await import("@/lib/db");
+      const { db: prisma } = await import("@/lib/db");
       await prisma.$queryRaw`SELECT 1`;
       (health as any).database = "connected";
     } catch {

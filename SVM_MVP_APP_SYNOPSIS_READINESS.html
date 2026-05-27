@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SVM MVP App Synopsis and Readiness</title>
+    <style>
+      @page {
+        size: Letter;
+        margin: 0.55in;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: #172033;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 10pt;
+        line-height: 1.43;
+      }
+      h1 {
+        margin: 0 0 12px;
+        padding: 24px 26px 16px;
+        color: #fff;
+        background: #172033;
+        font-size: 27pt;
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+      h2 {
+        margin: 20px 0 8px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #1d4ed8;
+        color: #0f172a;
+        font-size: 15pt;
+      }
+      h3 {
+        margin: 12px 0 5px;
+        color: #0f172a;
+        font-size: 12pt;
+      }
+      p {
+        margin: 0 0 7px;
+      }
+      ul,
+      ol {
+        margin: 5px 0 10px 18px;
+        padding: 0;
+      }
+      li {
+        margin: 2px 0;
+      }
+      strong {
+        color: #0f172a;
+      }
+      .meta {
+        margin: 0 0 14px;
+        padding: 0 2px 12px;
+        border-bottom: 1px solid #dbe3ef;
+        color: #334155;
+      }
+      .scale {
+        padding: 10px 12px;
+        border: 1px solid #dbe3ef;
+        border-left: 4px solid #1d4ed8;
+        background: #f8fafc;
+      }
+      .app {
+        break-inside: avoid;
+        margin: 0 0 10px;
+        padding: 10px 12px;
+        border: 1px solid #dbe3ef;
+        border-radius: 7px;
+        background: #fbfcff;
+      }
+      .app h3 {
+        margin-top: 0;
+      }
+      .excluded {
+        columns: 2;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SVM MVP App Synopsis and Readiness</h1>
+    <div class="meta">
+      <p><strong>Prepared:</strong> May 27, 2026</p>
+      <p><strong>Account reviewed:</strong> Shockvaluemedia GitHub</p>
+      <p><strong>Scope:</strong> Apps with enough product definition and implementation evidence to be considered MVP or beyond. Generic shells, empty wrappers, and repos without clear product-specific MVP evidence are excluded.</p>
+    </div>
+
+    <h2>Readiness Scale</h2>
+    <div class="scale">
+      <ul>
+        <li><strong>Production-ready:</strong> App appears positioned for live usage or public launch.</li>
+        <li><strong>Beta-ready:</strong> MVP is substantial and can support controlled pilots or internal/customer beta.</li>
+        <li><strong>MVP-ready:</strong> Core product flow exists, but launch hardening, QA, or integration work remains.</li>
+        <li><strong>MVP exists, blocked:</strong> Product flow exists, but current code/work state has known blockers before launch.</li>
+      </ul>
+    </div>
+
+    <h2>MVP or Better Apps</h2>
+
+    <section class="app">
+      <h3>SVM AI Growth Engine</h3>
+      <p><strong>Synopsis:</strong> AI-powered business growth platform for Shock Value Media. It includes AI readiness assessment, ROI calculator, AI business boardroom, lead scoring, analytics, CRM/contact management, and resource generation.</p>
+      <p><strong>Readiness:</strong> Production-ready</p>
+      <p><strong>Why:</strong> README states the platform is live at shockvaluemedia.com, marks status as operational, and documents active A/B testing, performance, analytics, deployment, validation, and boardroom integration.</p>
+      <p><strong>Next step:</strong> Keep monitoring performance, funnel analytics, and production validation after any release.</p>
+    </section>
+
+    <section class="app">
+      <h3>DirectFanz Project</h3>
+      <p><strong>Synopsis:</strong> Direct-to-fan platform connecting independent artists with superfans through subscriptions, exclusive content, artist dashboards, fan discovery, Stripe Connect payments, community features, and content access.</p>
+      <p><strong>Readiness:</strong> Production-ready candidate</p>
+      <p><strong>Why:</strong> README says the platform is 95% production-ready and the repo contains extensive production, launch, deployment, testing, security, monitoring, Stripe, S3, Redis, and NextAuth materials.</p>
+      <p><strong>Next step:</strong> Final production smoke test across artist onboarding, fan subscription, content access, payouts, and auth.</p>
+    </section>
+
+    <section class="app">
+      <h3>Culture Diagnostic 2.0</h3>
+      <p><strong>Synopsis:</strong> Multi-tenant culture diagnostic platform for organizations to run surveys, score 33 KPIs, analyze culture health and risk, generate reports, compare runs, and guide next-step planning.</p>
+      <p><strong>Readiness:</strong> Beta-ready</p>
+      <p><strong>Why:</strong> Product-specific README documents tenant isolation, survey delivery, scoring, dashboards, role-aware access, PDF/CSV export, and e2e/test/deployment materials.</p>
+      <p><strong>Next step:</strong> Run tenant-level QA across survey setup, response collection, scoring, role-specific dashboards, and report export.</p>
+    </section>
+
+    <section class="app">
+      <h3>Justice Informed Diagnostic</h3>
+      <p><strong>Synopsis:</strong> Secure, multi-tenant culture diagnostic app designed to reproduce Justice Informed's Culture Diagnostic workflow without Qualtrics. It supports survey building, encrypted response storage, proprietary scoring, dashboards, and client-facing report outputs.</p>
+      <p><strong>Readiness:</strong> MVP-ready</p>
+      <p><strong>Why:</strong> README documents the full product mission and core workflow, and the repo includes frontend/backend, deployment, demo, security, monitoring, and client workflow materials.</p>
+      <p><strong>Next step:</strong> Decide whether this remains separate or is superseded by Culture Diagnostic 2.0.</p>
+    </section>
+
+    <section class="app">
+      <h3>SVM Operator Core</h3>
+      <p><strong>Synopsis:</strong> AI-powered operations platform for service businesses. It spans lead capture, client conversion, project delivery, time tracking, billing, conversations, dashboards, admin import, health checks, and AI insights.</p>
+      <p><strong>Readiness:</strong> Beta-ready</p>
+      <p><strong>Why:</strong> README documents a full frontend/API/worker architecture, product areas, local login, AWS CDK infrastructure, tests, e2e scripts, and multi-tenant isolation.</p>
+      <p><strong>Next step:</strong> Validate the full lead-to-client-to-project-to-invoice journey with seeded data.</p>
+    </section>
+
+    <section class="app">
+      <h3>Afterschool Platform</h3>
+      <p><strong>Synopsis:</strong> Multi-tenant youth program management platform for schools, nonprofits, and afterschool providers. It supports activity publishing, family registration, payments, attendance, permission slips, volunteers, reporting, and organization management.</p>
+      <p><strong>Readiness:</strong> Beta-ready</p>
+      <p><strong>Why:</strong> README documents a complete SaaS architecture with Next.js, Prisma, shared packages, Redis, monitoring, local infra, AWS deployment direction, and test scripts.</p>
+      <p><strong>Next step:</strong> Pilot with one provider and test registration, payment, attendance, and reporting loops end to end.</p>
+    </section>
+
+    <section class="app">
+      <h3>Queen Ash Wellness Platform</h3>
+      <p><strong>Synopsis:</strong> Wellness assessment and program delivery platform for Queen Ash Enterprise. It includes multi-domain wellness assessments, scoring, personalized recommendations, program delivery, ecommerce, admin CMS, lead management, analytics, scheduling, email automation, and payments.</p>
+      <p><strong>Readiness:</strong> Beta-ready</p>
+      <p><strong>Why:</strong> README documents a complete feature set, Next.js/Prisma/PostgreSQL stack, Stripe, SendGrid, S3, admin console, deployment files, Docker options, and production validation scripts.</p>
+      <p><strong>Next step:</strong> Confirm production environment, test checkout/email flows, and run privacy review for wellness data.</p>
+    </section>
+
+    <section class="app">
+      <h3>Ash Flow Connect</h3>
+      <p><strong>Synopsis:</strong> Queen Ash wellness app variant focused on AI wellness coaching, assessments, classes, ecommerce, community, progress tracking, appointments, nutrition planning, and PWA support.</p>
+      <p><strong>Readiness:</strong> Beta-ready</p>
+      <p><strong>Why:</strong> README reports 16 pages, 12 AI edge functions, 33 tests, PWA support, Supabase backend, Playwright testing, monitoring, and CI/CD materials.</p>
+      <p><strong>Next step:</strong> Clarify whether this is the active Queen Ash app or should be merged into the Queen Ash Wellness Platform roadmap.</p>
+    </section>
+
+    <section class="app">
+      <h3>OptionPilot OS</h3>
+      <p><strong>Synopsis:</strong> AI-powered options trading education and discipline platform. It supports trader education, planning, journaling, risk awareness, simulated boardroom review, watchlists, market regime labeling, and decision practice.</p>
+      <p><strong>Readiness:</strong> MVP-ready</p>
+      <p><strong>Why:</strong> README documents core modules, Next.js app structure, PostgreSQL-compatible schema, AI provider abstraction, and clear education-only positioning. Auth is noted as architecture-ready rather than finished.</p>
+      <p><strong>Next step:</strong> Complete auth, legal disclaimers, and data persistence before any broader user launch.</p>
+    </section>
+
+    <section class="app">
+      <h3>Funding Intelligence OS</h3>
+      <p><strong>Synopsis:</strong> SaaS MVP for nonprofits, consultants, and community organizations to discover grant opportunities, track applications, upload files, and manage a funding pipeline.</p>
+      <p><strong>Readiness:</strong> MVP-ready</p>
+      <p><strong>Why:</strong> README explicitly calls it a production-ready AWS free-tier-friendly SaaS MVP, with frontend/backend monorepo, Cognito, API Gateway, Lambda, DynamoDB, S3, CloudWatch, and deploy instructions.</p>
+      <p><strong>Next step:</strong> Validate the grant discovery, pipeline, file upload, and auth flow in a real AWS staging account.</p>
+    </section>
+
+    <section class="app">
+      <h3>Rent Insight Engine / ERGO</h3>
+      <p><strong>Synopsis:</strong> Housing and human services operations platform for homelessness and emergency-services organizations. It combines housing inventory, case management, waitlists, service plans, referrals, crisis response, floor plan/site management, and a client portal.</p>
+      <p><strong>Readiness:</strong> MVP-ready</p>
+      <p><strong>Why:</strong> README documents a detailed product vision and deep module list with client intake, assessments, referrals, placement workflows, document management, and multi-facility support.</p>
+      <p><strong>Next step:</strong> Confirm which modules are actually implemented versus specified, then pilot one service workflow.</p>
+    </section>
+
+    <section class="app">
+      <h3>Strategic Counsel AI</h3>
+      <p><strong>Synopsis:</strong> AI executive boardroom where users present strategic decisions and receive deliberation from six executive perspectives: vision, execution, operations, brand, revenue, and purpose.</p>
+      <p><strong>Readiness:</strong> MVP-ready</p>
+      <p><strong>Why:</strong> README documents a clear product concept, React/Vite frontend, AWS Lambda/API Gateway/WebSocket backend, Supabase/PostgreSQL, Bedrock AI, Cognito, SES, Stripe, CloudFront, monitoring, and subscription tiers.</p>
+      <p><strong>Next step:</strong> Validate subscription gating, AI response quality, and counsel-session persistence.</p>
+    </section>
+
+    <section class="app">
+      <h3>Direct Fan Platform</h3>
+      <p><strong>Synopsis:</strong> Earlier direct-to-fan music platform for independent artists and superfans, including artist dashboards, fan subscriptions, Stripe Connect, comments, notifications, S3 storage, Redis, and NextAuth.</p>
+      <p><strong>Readiness:</strong> MVP-ready, likely superseded</p>
+      <p><strong>Why:</strong> README documents a complete stack and product flow, but the newer DirectFanz Project appears more production-ready and more heavily documented.</p>
+      <p><strong>Next step:</strong> Treat as legacy/reference unless it contains code not yet migrated into DirectFanz Project.</p>
+    </section>
+
+    <section class="app">
+      <h3>MathPath Tutor</h3>
+      <p><strong>Synopsis:</strong> Adaptive AI math tutoring platform for grade-school through high-school students. It diagnoses student level, identifies skill gaps, generates daily lessons, provides AI tutor chat, and gives parents progress visibility.</p>
+      <p><strong>Readiness:</strong> MVP exists, blocked</p>
+      <p><strong>Why:</strong> README documents a complete MVP flow and demo mode, but the current local work is mid-pivot from Student/Lesson to broader Learner/Module architecture and currently fails Prisma validation and TypeScript checks.</p>
+      <p><strong>Next step:</strong> Stabilize the schema/types/routes before launch, then run QA across signup, onboarding, diagnostic, lesson, tutor, dashboard, billing, and admin flows.</p>
+    </section>
+
+    <h2>Excluded From This MVP Readiness List</h2>
+    <ul class="excluded">
+      <li>repo-snuggler</li>
+      <li>entity-guard-ai</li>
+      <li>founder-command-center</li>
+      <li>sonic-launchpad-pro</li>
+      <li>command-center</li>
+      <li>good-goods-go</li>
+      <li>heartway-pathway</li>
+      <li>dealflow-pilot-92</li>
+      <li>SVM-Performance</li>
+      <li>smart-exec-hub</li>
+      <li>movement-speaker-forge</li>
+      <li>dealcraft-hq</li>
+      <li>curate-digest-ai</li>
+      <li>proof-of-truth-hub</li>
+      <li>route-stride-ops</li>
+    </ul>
+
+    <h2>Priority Launch Order</h2>
+    <ol>
+      <li>SVM AI Growth Engine</li>
+      <li>DirectFanz Project</li>
+      <li>Culture Diagnostic 2.0</li>
+      <li>SVM Operator Core</li>
+      <li>Afterschool Platform</li>
+      <li>Queen Ash Wellness Platform / Ash Flow Connect, after choosing the canonical app</li>
+      <li>OptionPilot OS</li>
+      <li>Funding Intelligence OS</li>
+      <li>Strategic Counsel AI</li>
+      <li>Rent Insight Engine / ERGO</li>
+      <li>MathPath Tutor, after stabilization</li>
+    </ol>
+  </body>
+</html>

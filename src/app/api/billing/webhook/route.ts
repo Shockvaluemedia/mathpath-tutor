@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
 
     switch (event.type) {
       case "checkout.session.completed": {

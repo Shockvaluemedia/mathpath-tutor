@@ -29,7 +29,7 @@ function buildDiagnosticPrompt(
   profile: StudentProfile,
   previousResponses?: { skillId: string; isCorrect: boolean; difficulty: number }[]
 ): string {
-  const gradeTopics = getTopicsForGradeBand(profile.gradeBand);
+  const gradeTopics = getTopicsForGradeBand(profile.gradeBand as GradeBand || "ELEMENTARY");
   
   let context = `Generate 5 adaptive diagnostic math questions for this student:
 - Name: ${profile.name}
@@ -67,13 +67,17 @@ Adjust difficulty accordingly. If they're doing well, increase difficulty. If st
 
 function getTopicsForGradeBand(gradeBand: GradeBand): string[] {
   switch (gradeBand) {
+    case "EARLY_CHILDHOOD":
     case "EARLY_ELEMENTARY":
       return ["counting", "number recognition", "addition basics", "subtraction basics", "patterns", "shapes", "comparing numbers"];
     case "ELEMENTARY":
       return ["multiplication", "division", "fractions", "decimals", "word problems", "place value", "measurement", "geometry basics"];
+    case "MIDDLE":
     case "MIDDLE_SCHOOL":
       return ["pre-algebra", "ratios", "proportions", "integers", "expressions", "equations", "percentages", "coordinate plane"];
     case "HIGH_SCHOOL":
       return ["algebra", "linear equations", "quadratics", "functions", "geometry proofs", "trigonometry", "statistics", "probability"];
+    default:
+      return ["general skills", "problem solving", "critical thinking"];
   }
 }

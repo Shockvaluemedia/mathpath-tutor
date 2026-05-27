@@ -6,7 +6,7 @@ export async function generateDailyLesson(
   skillProfile: SkillProfile
 ): Promise<DailyLesson> {
   const focusSkill = skillProfile.weakSkills[0] || skillProfile.developingSkills[0];
-  const gradeBandPrompt = getSystemPromptForGradeBand(studentProfile.gradeBand);
+  const gradeBandPrompt = getSystemPromptForGradeBand(studentProfile.gradeBand || studentProfile.developmentalStage || "ELEMENTARY");
 
   const prompt = `Generate a complete daily math lesson for this student:
 

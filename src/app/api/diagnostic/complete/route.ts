@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       // Return a demo skill profile
       const skillProfile = {
         estimatedLevel: `Grade ${grade} level with some gaps in foundational skills`,
-        gradeLevelComparison: "Slightly below grade level in some areas, on track in others",
+        levelComparison: "Slightly below grade level in some areas, on track in others",
         masteredSkills: [
           { id: "s1", name: "Addition", domain: "Operations", masteryScore: 95, confidenceScore: 90, status: "MASTERED" },
           { id: "s2", name: "Subtraction", domain: "Operations", masteryScore: 88, confidenceScore: 85, status: "MASTERED" },
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
     const { generateSkillProfile } = await import("@/lib/ai");
 

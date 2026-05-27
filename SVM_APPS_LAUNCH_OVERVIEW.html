@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SVM Apps Launch Overview</title>
+    <style>
+      @page {
+        size: Letter;
+        margin: 0.55in;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: #172033;
+        background: #ffffff;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.45;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 7px;
+        color: #0f172a;
+        font-size: 28pt;
+        letter-spacing: 0;
+        line-height: 1.05;
+      }
+
+      h2 {
+        margin: 22px 0 9px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #1d4ed8;
+        color: #0f172a;
+        font-size: 16pt;
+      }
+
+      h3 {
+        margin: 13px 0 5px;
+        color: #172033;
+        font-size: 12.5pt;
+      }
+
+      p {
+        margin-bottom: 8px;
+      }
+
+      ul,
+      ol {
+        margin: 5px 0 10px 18px;
+        padding: 0;
+      }
+
+      li {
+        margin: 2px 0;
+      }
+
+      .cover {
+        margin-bottom: 18px;
+        padding: 22px 24px;
+        color: #ffffff;
+        background: #172033;
+      }
+
+      .cover p {
+        max-width: 6.8in;
+        margin-bottom: 0;
+        color: #dbeafe;
+        font-size: 11pt;
+      }
+
+      .meta {
+        display: flex;
+        gap: 8px;
+        margin: 0 0 14px;
+        color: #bfdbfe;
+        font-size: 9pt;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .section-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .item {
+        break-inside: avoid;
+        margin-bottom: 10px;
+        padding: 11px 12px;
+        border: 1px solid #dbe3ef;
+        border-radius: 7px;
+        background: #fbfcff;
+      }
+
+      .item h3 {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 999px;
+        color: #ffffff;
+        background: #1d4ed8;
+        font-size: 7.5pt;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .soon {
+        background: #0f766e;
+      }
+
+      .path {
+        padding: 13px 15px;
+        border-left: 4px solid #1d4ed8;
+        background: #eff6ff;
+      }
+
+      .notes {
+        padding: 12px 14px;
+        border: 1px solid #dbe3ef;
+        background: #f8fafc;
+      }
+
+      .compact li {
+        margin-bottom: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="cover">
+      <div class="meta">
+        <span>SVM</span>
+        <span>May 27, 2026</span>
+        <span>Launch Overview</span>
+      </div>
+      <h1>Apps Ready to Launch and Coming Soon</h1>
+      <p>
+        A quick overview of SVM product areas that are ready for early launch, plus the capabilities planned next.
+      </p>
+    </section>
+
+    <h2>Ready to Launch</h2>
+    <div class="section-grid">
+      <article class="item">
+        <h3><span class="badge">Ready</span> MathPath Tutor</h3>
+        <p>
+          Adaptive AI math tutoring for grade-school through high-school students, from diagnostic assessment to daily practice and guided AI tutoring.
+        </p>
+        <ul class="compact">
+          <li>Parent signup and login</li>
+          <li>Student onboarding</li>
+          <li>Adaptive diagnostic assessment</li>
+          <li>Skill profile generation</li>
+          <li>Personalized daily lessons</li>
+          <li>AI tutor chat</li>
+          <li>Parent dashboard and student management</li>
+          <li>Lesson review, history, achievements, and gamification</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge">Ready</span> Parent Progress Reports</h3>
+        <p>
+          Clear parent-facing visibility into progress, mastery, confidence, and recent learning activity.
+        </p>
+        <ul class="compact">
+          <li>Parent dashboard</li>
+          <li>Weekly progress report generation</li>
+          <li>Student progress summaries</li>
+          <li>Recent activity review</li>
+          <li>Student-level progress APIs</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge">Ready</span> Admin Operations Console</h3>
+        <p>
+          Internal SVM operations tools for managing students, reviewing analytics, and maintaining the learning skill map.
+        </p>
+        <ul class="compact">
+          <li>Admin dashboard</li>
+          <li>Student oversight</li>
+          <li>Analytics views</li>
+          <li>Skill map management</li>
+          <li>Skill create, update, and delete routes</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge">Ready</span> Billing and Subscription Flow</h3>
+        <p>
+          Early paid conversion path for families moving from demo or trial usage into a subscription.
+        </p>
+        <ul class="compact">
+          <li>Plan selection page</li>
+          <li>Stripe checkout</li>
+          <li>Billing success page</li>
+          <li>Customer billing portal</li>
+          <li>Stripe webhook handling</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge">Ready</span> Deployment Foundation</h3>
+        <p>
+          Core deployment pieces needed to stage and operate the product.
+        </p>
+        <ul class="compact">
+          <li>Docker support</li>
+          <li>AWS deployment documentation</li>
+          <li>ECS task definition</li>
+          <li>Health check route</li>
+          <li>Environment-based production configuration</li>
+        </ul>
+      </article>
+    </div>
+
+    <h2>Coming Soon</h2>
+    <div class="section-grid">
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Adaptive Learning OS</h3>
+        <p>
+          Expansion from a math-only tutor into a broader adaptive learning platform.
+        </p>
+        <ul class="compact">
+          <li>Multi-domain learning support</li>
+          <li>Learner profiles beyond math</li>
+          <li>Personalized intervention plans</li>
+          <li>Social-emotional learning signals</li>
+          <li>Flexible learning modules</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Expanded AI Learning Engine</h3>
+        <p>
+          More responsive lessons, assessments, tutoring, and remediation.
+        </p>
+        <ul class="compact">
+          <li>Richer mistake analysis</li>
+          <li>Stronger prerequisite detection</li>
+          <li>Adaptive remediation paths</li>
+          <li>Confidence recovery support</li>
+          <li>More nuanced learner memory</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Notifications and Engagement</h3>
+        <p>
+          Lightweight nudges that help families stay consistent.
+        </p>
+        <ul class="compact">
+          <li>Parent email updates</li>
+          <li>Weekly report delivery</li>
+          <li>Lesson reminders</li>
+          <li>Progress milestone alerts</li>
+          <li>Missed-practice nudges</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Student Independence Mode</h3>
+        <p>
+          A safer, more independent student experience built on student login.
+        </p>
+        <ul class="compact">
+          <li>Student-first login flow</li>
+          <li>Age-appropriate navigation</li>
+          <li>Student-owned progress views</li>
+          <li>Independent lesson continuation</li>
+          <li>Parent-controlled permissions</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Richer Parent Insights</h3>
+        <p>
+          More actionable parent reports and summaries.
+        </p>
+        <ul class="compact">
+          <li>Mastery and confidence trends</li>
+          <li>Plain-language skill gap explanations</li>
+          <li>Recommended parent actions</li>
+          <li>Monthly learning summaries</li>
+          <li>Exportable reports</li>
+        </ul>
+      </article>
+
+      <article class="item">
+        <h3><span class="badge soon">Soon</span> Classroom and Group Support</h3>
+        <p>
+          Growth path for groups, pods, tutoring centers, and classrooms.
+        </p>
+        <ul class="compact">
+          <li>Cohort management</li>
+          <li>Group progress dashboards</li>
+          <li>Educator and tutor accounts</li>
+          <li>Assignment-style learning plans</li>
+          <li>Cohort-level analytics</li>
+        </ul>
+      </article>
+    </div>
+
+    <h2>Suggested Launch Path</h2>
+    <div class="path">
+      <ol>
+        <li>Internal SVM staging review</li>
+        <li>Private pilot with selected families</li>
+        <li>Paid beta with billing enabled</li>
+        <li>Broader public launch after QA, reporting, and operational feedback are stable</li>
+      </ol>
+    </div>
+
+    <h2>Launch Readiness Notes</h2>
+    <p class="notes">
+      Before public launch, SVM should confirm pricing, production environment variables, Stripe webhook setup,
+      email configuration, privacy language, database migration readiness, and end-to-end QA across signup,
+      onboarding, diagnostic, learning, tutor, dashboard, billing, and admin flows.
+    </p>
+  </body>
+</html>

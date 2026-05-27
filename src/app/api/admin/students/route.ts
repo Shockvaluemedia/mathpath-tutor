@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ students, total: students.length });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
 
     const where: any = {};
     if (search) {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       prisma.student.count({ where }),
     ]);
 
-    const enriched = students.map((s) => ({
+    const enriched = students.map((s: any) => ({
       id: s.id,
       name: s.name,
       age: s.age,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       confidenceLevel: s.confidenceLevel,
       parentName: s.parent.name,
       parentEmail: s.parent.email,
-      masteredSkills: s.skillMastery.filter((sm) => sm.status === "MASTERED").length,
+      masteredSkills: s.skillMastery.filter((sm: any) => sm.status === "MASTERED").length,
       totalSkills: s.skillMastery.length,
       lastActive: s.lessons[0]?.createdAt || s.createdAt,
       createdAt: s.createdAt,

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
           id: student.id,
           name: student.name,
           email: `${student.name.toLowerCase()}@student.mathpath.dev`,
-          role: "STUDENT",
+          role: "LEARNER",
         },
         token: `demo-student-token-${student.id}`,
         student: {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production: look up student by access code
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { generateToken } = await import("@/lib/auth");
 
     // Access code is the first 8 chars of the student ID (simplified)
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken({
       userId: student.id,
       email: `${student.name.toLowerCase()}@student.mathpath.dev`,
-      role: "STUDENT",
+      role: "LEARNER",
     });
 
     return NextResponse.json({
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         id: student.id,
         name: student.name,
         email: `${student.name.toLowerCase()}@student.mathpath.dev`,
-        role: "STUDENT",
+        role: "LEARNER",
       },
       token,
       student: {

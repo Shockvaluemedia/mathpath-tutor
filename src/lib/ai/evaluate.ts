@@ -11,7 +11,7 @@ export async function evaluateResponse(
 Student info: Age ${studentAge}, Grade Band: ${gradeBand}
 
 Question: ${responseData.question}
-Student's Answer: ${responseData.studentAnswer}
+Student's Answer: ${responseData.learnerAnswer}
 Correct Answer: ${responseData.correctAnswer}
 Time Spent: ${responseData.timeSpent} seconds
 Hints Used: ${responseData.hintsUsed}

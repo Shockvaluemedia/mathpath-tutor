@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
 
     const token = getTokenFromHeader(request.headers.get("authorization"));
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ students: DEMO_STUDENTS });
     }
 
-    const { prisma } = await import("@/lib/db");
+    const { db: prisma } = await import("@/lib/db");
     const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
 
     const token = getTokenFromHeader(request.headers.get("authorization"));
