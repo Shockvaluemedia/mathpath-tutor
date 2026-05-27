@@ -85,6 +85,13 @@ async function bedrockCompletion(options: ChatOptions): Promise<string> {
 
   const content = responseBody.content?.[0]?.text;
   if (!content) throw new Error("No response from Bedrock");
+
+  // Strip markdown code blocks if present (Claude sometimes wraps JSON in ```json...```)
+  if (options.jsonMode) {
+    const stripped = content.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+    return stripped;
+  }
+
   return content;
 }
 
