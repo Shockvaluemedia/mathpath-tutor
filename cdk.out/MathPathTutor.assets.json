@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "e2a8849f389dddf51703670eaa2c1b748f070839edb375671a85eb593887f292": {
+      "displayName": "MathPathTutor Template",
+      "source": {
+        "path": "MathPathTutor.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "958972795537-us-east-1-8a2da3bd": {
+          "bucketName": "cdk-hnb659fds-assets-958972795537-us-east-1",
+          "objectKey": "e2a8849f389dddf51703670eaa2c1b748f070839edb375671a85eb593887f292.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::958972795537:role/cdk-hnb659fds-file-publishing-role-958972795537-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
