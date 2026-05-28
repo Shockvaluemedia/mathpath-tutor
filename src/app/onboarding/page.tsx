@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
+import { BookOpen, Brain, Clock, Users } from "lucide-react";
 
 const LEARNING_STYLES = [
   { id: "visual", label: "Visual", description: "Pictures, diagrams, colors" },
@@ -25,7 +26,7 @@ const HARD_TOPICS = [
 export default function OnboardingPage() {
   const router = useRouter();
   const { apiRequest, setCurrentStudent } = useAuth();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // 0 = intro, 1-3 = form steps, 4 = ready
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -73,7 +74,7 @@ export default function OnboardingPage() {
         gradeBand: data.student.gradeBand,
       });
 
-      router.push("/diagnostic");
+      setStep(4); // Show "ready" screen
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -85,26 +86,76 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white py-12 px-4">
       <div className="mx-auto max-w-lg">
         {/* Progress */}
-        <div className="mb-8 flex items-center justify-center gap-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-2 w-16 rounded-full transition-colors ${
-                s <= step ? "bg-indigo-500" : "bg-gray-200"
-              }`}
-            />
-          ))}
-        </div>
+        {step > 0 && step < 4 && (
+          <div className="mb-8 flex items-center justify-center gap-2">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`h-2 w-16 rounded-full transition-colors ${
+                  s <= step ? "bg-indigo-500" : "bg-gray-200"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
+        {/* Step 0: Introduction — explains what's about to happen */}
+        {step === 0 && (
+          <Card className="animate-fade-in-up">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                <BookOpen className="h-7 w-7 text-white" />
+              </div>
+              <CardTitle className="text-2xl">Let&apos;s set up your child&apos;s profile</CardTitle>
+              <CardDescription className="text-base mt-2">
+                This takes about 2 minutes. Here&apos;s what will happen:
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <StepPreview
+                  icon={<Users className="h-5 w-5 text-indigo-500" />}
+                  title="1. You tell us about your child"
+                  description="Name, age, grade, and what they find challenging (you do this part)"
+                />
+                <StepPreview
+                  icon={<Brain className="h-5 w-5 text-purple-500" />}
+                  title="2. Your child takes a short diagnostic"
+                  description="15 minutes of adaptive questions to find their exact level"
+                />
+                <StepPreview
+                  icon={<BookOpen className="h-5 w-5 text-emerald-500" />}
+                  title="3. We build their personalized path"
+                  description="Skill profile, daily lessons, and AI tutor — all customized"
+                />
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
+                <p className="text-sm text-amber-800 font-medium">📋 Important</p>
+                <p className="text-sm text-amber-700 mt-1">
+                  You&apos;ll fill out the profile now. When it&apos;s time for the diagnostic,
+                  <strong> your child will need to be present</strong> to answer the questions themselves.
+                  You can start the diagnostic now or come back to it later.
+                </p>
+              </div>
+
+              <Button className="w-full mt-4" size="lg" onClick={() => setStep(1)}>
+                Let&apos;s Get Started
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 1: Basic info */}
         {step === 1 && (
-          <Card>
+          <Card className="animate-fade-in-up">
             <CardHeader>
-              <CardTitle>Tell us about your student</CardTitle>
-              <CardDescription>We&apos;ll use this to personalize their learning experience</CardDescription>
+              <CardTitle>About your child</CardTitle>
+              <CardDescription>We&apos;ll use this to personalize their experience</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="studentName">Student&apos;s First Name</Label>
+                <Label htmlFor="studentName">First Name</Label>
                 <Input
                   id="studentName"
                   placeholder="e.g., Alex"
@@ -158,8 +209,9 @@ export default function OnboardingPage() {
           </Card>
         )}
 
+        {/* Step 2: Confidence & challenges */}
         {step === 2 && (
-          <Card>
+          <Card className="animate-fade-in-up">
             <CardHeader>
               <CardTitle>How does {form.name} feel about math?</CardTitle>
               <CardDescription>This helps us set the right tone and pace</CardDescription>
@@ -201,19 +253,16 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                  Back
-                </Button>
-                <Button onClick={() => setStep(3)} className="flex-1">
-                  Continue
-                </Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+                <Button onClick={() => setStep(3)} className="flex-1">Continue</Button>
               </div>
             </CardContent>
           </Card>
         )}
 
+        {/* Step 3: Learning style */}
         {step === 3 && (
-          <Card>
+          <Card className="animate-fade-in-up">
             <CardHeader>
               <CardTitle>How does {form.name} learn best?</CardTitle>
               <CardDescription>We&apos;ll adapt our teaching style to match</CardDescription>
@@ -241,20 +290,85 @@ export default function OnboardingPage() {
               )}
 
               <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
-                  Back
-                </Button>
+                <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Back</Button>
                 <Button
                   onClick={handleSubmit}
                   disabled={!form.learningStyle || loading}
                   className="flex-1"
                 >
-                  {loading ? "Setting up..." : "Start Diagnostic"}
+                  {loading ? "Setting up..." : "Save Profile"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Step 4: Ready — clear handoff to student */}
+        {step === 4 && (
+          <Card className="animate-scale-in">
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-2">🎉</div>
+              <CardTitle className="text-2xl">{form.name}&apos;s profile is ready!</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Now it&apos;s time for the diagnostic assessment
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
+                <h3 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Hand the device to {form.name}
+                </h3>
+                <p className="text-sm text-indigo-700 mb-3">
+                  The diagnostic is a short set of questions that adapts to {form.name}&apos;s level.
+                  It&apos;s not a test — there&apos;s no grade. It just helps us understand where to start.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-indigo-600">
+                  <Clock className="h-4 w-4" />
+                  <span>Takes about 10-15 minutes</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-sm text-gray-600">
+                <p className="font-medium text-gray-900">Tips for {form.name}:</p>
+                <ul className="space-y-1 ml-4 list-disc">
+                  <li>It&apos;s okay to not know answers — that helps us help you!</li>
+                  <li>Use the hints if you get stuck</li>
+                  <li>Tell us how confident you feel on each question</li>
+                  <li>There&apos;s no time limit — take your time</li>
+                </ul>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button size="lg" className="w-full" onClick={() => router.push("/diagnostic")}>
+                  <Brain className="h-5 w-5 mr-2" />
+                  Start Diagnostic Now
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard")}>
+                  I&apos;ll do this later — go to dashboard
+                </Button>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center">
+                You can always start the diagnostic later from the dashboard.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StepPreview({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm shrink-0">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       </div>
     </div>
   );
