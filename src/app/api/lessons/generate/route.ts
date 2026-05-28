@@ -1,118 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
 function getDemoLesson(gradeBand: string) {
-  if (gradeBand === "MIDDLE_SCHOOL") {
-    return {
-      title: "Solving One-Step Equations",
-      focusSkill: "Equations",
-      gradeBand,
-      warmup: {
-        title: "Quick Review",
-        instructions: "Let's warm up with some integer operations!",
-        content: "Before we solve equations, let's make sure we're solid with positive and negative numbers.",
-        questions: [
-          { question: "What is -5 + 8?", hints: ["Start at -5 and move 8 to the right"], answer: "3", explanation: "-5 + 8 = 3 because you move 8 steps right from -5" },
-          { question: "What is 12 - 15?", hints: ["You're subtracting more than you have"], answer: "-3", explanation: "12 - 15 = -3 because you go 3 below zero" },
-        ],
-      },
-      miniLesson: {
-        title: "What Is an Equation?",
-        instructions: "Read carefully — this is the key concept for today!",
-        content: "An equation is like a balance scale. Both sides must be equal.\n\nWhen we see x + 5 = 12, we're asking: \"What number plus 5 gives us 12?\"\n\nTo solve, we do the OPPOSITE operation to both sides:\n• If something is added, we subtract it\n• If something is subtracted, we add it\n• If something is multiplied, we divide\n• If something is divided, we multiply\n\nThe goal: get x alone on one side.",
-        questions: [],
-      },
-      guidedPractice: {
-        title: "Let's Solve Together",
-        instructions: "Try these step by step. Remember: do the opposite operation!",
-        content: "Solve each equation for x.",
-        questions: [
-          { question: "x + 3 = 10", hints: ["Subtract 3 from both sides"], answer: "7", explanation: "x + 3 = 10 → x = 10 - 3 → x = 7" },
-          { question: "x - 4 = 9", hints: ["Add 4 to both sides"], answer: "13", explanation: "x - 4 = 9 → x = 9 + 4 → x = 13" },
-          { question: "2x = 14", hints: ["Divide both sides by 2"], answer: "7", explanation: "2x = 14 → x = 14 ÷ 2 → x = 7" },
-        ],
-      },
-      independentPractice: {
-        title: "Your Turn!",
-        instructions: "Solve these on your own. You've got this!",
-        content: "Find the value of x in each equation.",
-        questions: [
-          { question: "x + 7 = 15", hints: ["Subtract 7 from both sides"], answer: "8", explanation: "x = 15 - 7 = 8" },
-          { question: "x - 6 = 11", hints: ["Add 6 to both sides"], answer: "17", explanation: "x = 11 + 6 = 17" },
-          { question: "3x = 21", hints: ["Divide both sides by 3"], answer: "7", explanation: "x = 21 ÷ 3 = 7" },
-          { question: "x/4 = 5", hints: ["Multiply both sides by 4"], answer: "20", explanation: "x = 5 × 4 = 20" },
-        ],
-      },
-      challenge: {
-        title: "Challenge",
-        instructions: "This one combines what you've learned!",
-        content: "Try this two-step equation.",
-        questions: [
-          { question: "2x + 3 = 11. What is x?", hints: ["First subtract 3 from both sides", "Then divide by 2"], answer: "4", explanation: "2x + 3 = 11 → 2x = 8 → x = 4" },
-        ],
-      },
-      reflection: {
-        title: "Reflection",
-        instructions: "Think about what you learned today.",
-        content: "Nice work! You just solved equations — that's real algebra.\n\n• What's the key idea? (Do the opposite operation!)\n• Which type felt easiest?\n• Which type do you want more practice with?\n\nRemember: an equation is just a puzzle. You already know how to solve puzzles.",
-        questions: [],
-      },
-    };
-  }
-
-  // Default: Elementary fractions lesson
+  const isMiddle = gradeBand === "MIDDLE_SCHOOL" || gradeBand === "MIDDLE";
   return {
-    title: "Understanding Fractions with Visual Models",
-    focusSkill: "Fractions",
+    title: isMiddle ? "Solving One-Step Equations" : "Understanding Fractions with Visual Models",
+    focusSkill: isMiddle ? "Equations" : "Fractions",
     gradeBand,
     warmup: {
       title: "Quick Review",
-      instructions: "Let's warm up with some problems you already know!",
-      content: "Before we dive into fractions, let's make sure we're comfortable with division.",
+      instructions: "Let's warm up!",
+      content: isMiddle ? "Before equations, let's review integers." : "Before fractions, let's review division.",
       questions: [
-        { question: "What is 12 ÷ 4?", hints: ["How many groups of 4 make 12?"], answer: "3", explanation: "12 ÷ 4 = 3 because 4 × 3 = 12" },
-        { question: "What is 8 ÷ 2?", hints: ["Split 8 into 2 equal groups"], answer: "4", explanation: "8 ÷ 2 = 4 because 2 × 4 = 8" },
+        { question: isMiddle ? "What is -5 + 8?" : "What is 12 ÷ 4?", hints: ["Think step by step"], answer: isMiddle ? "3" : "3", explanation: isMiddle ? "-5 + 8 = 3" : "12 ÷ 4 = 3" },
       ],
     },
     miniLesson: {
-      title: "What Are Fractions?",
-      instructions: "Read through this carefully. Take your time!",
-      content: "A fraction represents a PART of a whole thing.\n\n🍕 If you cut a pizza into 4 equal slices and eat 1 slice, you ate 1/4.\n\nThe bottom number (denominator) = how many EQUAL parts total\nThe top number (numerator) = how many parts you're talking about\n\n3/4 means \"3 out of 4 equal parts\"\n\nKey: The parts MUST be equal!",
+      title: isMiddle ? "What Is an Equation?" : "What Are Fractions?",
+      instructions: "Read carefully!",
+      content: isMiddle ? "An equation is like a balance scale. Both sides must be equal.\n\nTo solve x + 5 = 12, do the OPPOSITE operation to both sides." : "A fraction represents a PART of a whole.\n\n🍕 Cut a pizza into 4 slices, eat 1 = 1/4.\n\nBottom number = total parts. Top number = parts you're talking about.",
       questions: [],
     },
     guidedPractice: {
       title: "Let's Practice Together",
-      instructions: "Try these problems. Use hints if you need them!",
-      content: "Let's practice identifying fractions.",
+      instructions: "Try these with hints!",
+      content: "Solve each problem.",
       questions: [
-        { question: "A pie is cut into 8 equal slices. You eat 3. What fraction did you eat?", hints: ["Total slices = denominator", "Slices eaten = numerator"], answer: "3/8", explanation: "3 out of 8 slices = 3/8" },
-        { question: "What fraction is shaded if 2 out of 5 parts are colored?", hints: ["Colored parts on top, total on bottom"], answer: "2/5", explanation: "2 shaded out of 5 total = 2/5" },
-        { question: "Which is bigger: 1/2 or 1/4?", hints: ["Fewer pieces = bigger pieces"], answer: "1/2", explanation: "1/2 is bigger — fewer pieces means each piece is larger" },
+        { question: isMiddle ? "Solve: x + 3 = 10" : "A pie has 8 slices. You eat 3. What fraction did you eat?", hints: [isMiddle ? "Subtract 3 from both sides" : "Slices eaten / total slices"], answer: isMiddle ? "7" : "3/8", explanation: isMiddle ? "x = 10 - 3 = 7" : "3 out of 8 = 3/8" },
+        { question: isMiddle ? "Solve: x - 4 = 9" : "Which is bigger: 1/2 or 1/4?", hints: [isMiddle ? "Add 4 to both sides" : "Fewer pieces = bigger pieces"], answer: isMiddle ? "13" : "1/2", explanation: isMiddle ? "x = 9 + 4 = 13" : "1/2 is bigger" },
       ],
     },
     independentPractice: {
       title: "Your Turn!",
-      instructions: "Try these on your own. You've got this!",
-      content: "Apply what you learned about fractions.",
+      instructions: "Try these on your own!",
+      content: "You've got this.",
       questions: [
-        { question: "Write a fraction: 5 out of 10 equal parts", hints: ["Numerator/Denominator"], answer: "5/10", explanation: "5/10 (which also equals 1/2!)" },
-        { question: "A chocolate bar has 6 pieces. You give away 2. What fraction is left?", hints: ["6 - 2 = 4 pieces left"], answer: "4/6", explanation: "4 pieces left out of 6 = 4/6" },
-        { question: "Is 3/4 more or less than 1/2?", hints: ["Half of 4 is 2, and 3 > 2"], answer: "more", explanation: "3/4 > 1/2 because 3 is more than half of 4" },
-        { question: "What fraction of a week is 3 days?", hints: ["A week has 7 days"], answer: "3/7", explanation: "3 days out of 7 = 3/7" },
+        { question: isMiddle ? "Solve: 2x = 14" : "Write a fraction: 5 out of 10 parts", hints: [isMiddle ? "Divide both sides by 2" : "Numerator/Denominator"], answer: isMiddle ? "7" : "5/10", explanation: isMiddle ? "x = 14 ÷ 2 = 7" : "5/10 (equals 1/2!)" },
+        { question: isMiddle ? "Solve: x/4 = 5" : "What fraction of a week is 3 days?", hints: [isMiddle ? "Multiply both sides by 4" : "Days in a week = 7"], answer: isMiddle ? "20" : "3/7", explanation: isMiddle ? "x = 5 × 4 = 20" : "3 out of 7 = 3/7" },
       ],
     },
     challenge: {
-      title: "Challenge Problem",
-      instructions: "Stretch yourself — give it your best shot!",
-      content: "Apply fractions to a trickier situation.",
+      title: "Challenge",
+      instructions: "Stretch yourself!",
+      content: "Try this harder one.",
       questions: [
-        { question: "Sam ate 2/8 of a pizza and Kim ate 3/8. What fraction did they eat together?", hints: ["Add numerators when denominators match"], answer: "5/8", explanation: "2/8 + 3/8 = 5/8" },
+        { question: isMiddle ? "Solve: 2x + 3 = 11" : "Sam ate 2/8 and Kim ate 3/8. Total?", hints: [isMiddle ? "First subtract 3, then divide by 2" : "Add numerators when denominators match"], answer: isMiddle ? "4" : "5/8", explanation: isMiddle ? "2x = 8, x = 4" : "2/8 + 3/8 = 5/8" },
       ],
     },
     reflection: {
       title: "Reflection",
-      instructions: "Think about what you learned today.",
-      content: "Great work! Think about:\n\n• What's one new thing you learned about fractions?\n• Was anything tricky? That's normal!\n• Can you spot a fraction in real life today?\n\nFractions are everywhere — cooking, sharing, time. You use them daily!",
+      instructions: "Think about what you learned.",
+      content: isMiddle ? "Nice work! What's the key idea? (Do the opposite operation!)" : "Great work! Fractions are just parts of things. You use them every day!",
       questions: [],
     },
   };
@@ -136,64 +76,77 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { db: prisma } = await import("@/lib/db");
-    const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
-    const { generateDailyLesson } = await import("@/lib/ai");
-
     const token = getTokenFromHeader(request.headers.get("authorization"));
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
-    const student = await prisma.student.findUnique({
+    const learner = await prisma.learner.findUnique({
       where: { id: studentId },
-      include: {
-        skillMastery: { include: { skill: true } },
-        assessments: { orderBy: { completedAt: "desc" }, take: 1 },
-      },
+      include: { profile: true, skillMastery: { include: { skill: true } } },
     });
-    if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    if (!learner) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-    const studentProfile = {
-      id: student.id,
-      name: student.name,
-      age: student.age,
-      grade: student.grade,
-      gradeBand: student.gradeBand,
-      confidenceLevel: student.confidenceLevel,
-      learningPreferences: student.learningPreferences as unknown as any,
-    };
+    const gradeBand = learner.developmentalStage === "EARLY_CHILDHOOD" ? "EARLY_ELEMENTARY"
+      : learner.developmentalStage === "MIDDLE" ? "MIDDLE_SCHOOL"
+      : learner.developmentalStage;
 
-    const skillProfile = {
-      estimatedLevel: student.assessments[0]?.estimatedLevel || `Grade ${student.grade}`,
-      levelComparison: "On track",
-      masteredSkills: student.skillMastery.filter((sm) => sm.status === "MASTERED").map((sm) => ({
-        id: sm.skillId, name: sm.skill.name, domain: sm.skill.domain, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
-      })),
-      developingSkills: student.skillMastery.filter((sm) => sm.status === "DEVELOPING" || sm.status === "PRACTICING").map((sm) => ({
-        id: sm.skillId, name: sm.skill.name, domain: sm.skill.domain, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
-      })),
-      weakSkills: student.skillMastery.filter((sm) => sm.status === "NOT_STARTED" || sm.masteryScore < 40).map((sm) => ({
-        id: sm.skillId, name: sm.skill.name, domain: sm.skill.domain, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
-      })),
-      rootCauses: [],
-      recommendedStartingPoint: "",
-    };
+    // Try AI generation
+    let lesson;
+    try {
+      const { generateDailyLesson } = await import("@/lib/ai");
+      const studentProfile = {
+        id: learner.id,
+        name: learner.name,
+        age: learner.age,
+        grade: learner.grade,
+        gradeBand,
+        confidenceLevel: learner.profile?.confidenceLevel || 5,
+        learningPreferences: learner.profile?.preferences as any || {},
+      };
 
-    const lesson = await generateDailyLesson(studentProfile, skillProfile);
+      const skillProfile = {
+        estimatedLevel: `Grade ${learner.grade}`,
+        levelComparison: "On track",
+        masteredSkills: learner.skillMastery.filter((sm) => sm.status === "MASTERED").map((sm) => ({
+          id: sm.skillId, name: sm.skill.name, domain: sm.skill.domainId, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
+        })),
+        developingSkills: learner.skillMastery.filter((sm) => sm.status === "DEVELOPING" || sm.status === "PRACTICING").map((sm) => ({
+          id: sm.skillId, name: sm.skill.name, domain: sm.skill.domainId, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
+        })),
+        weakSkills: learner.skillMastery.filter((sm) => sm.status === "NOT_STARTED" || sm.status === "EMERGING" || sm.masteryScore < 40).map((sm) => ({
+          id: sm.skillId, name: sm.skill.name, domain: sm.skill.domainId, masteryScore: sm.masteryScore, confidenceScore: sm.confidenceScore, status: sm.status,
+        })),
+        rootCauses: [],
+        recommendedStartingPoint: "",
+      };
 
-    const focusSkillId = student.skillMastery[0]?.skillId || "general";
-    const savedLesson = await prisma.lesson.create({
-      data: {
-        studentId,
-        title: lesson.title,
-        focusSkillId: student.skillMastery[0]?.skillId || focusSkillId,
-        gradeBand: student.gradeBand,
-        lessonJson: JSON.parse(JSON.stringify(lesson)),
-      },
-    });
+      lesson = await generateDailyLesson(studentProfile, skillProfile);
+    } catch {
+      // Fallback to demo lesson
+      lesson = getDemoLesson(gradeBand);
+    }
 
-    return NextResponse.json({ lesson, lessonId: savedLesson.id });
+    // Save the module
+    const mathDomain = await prisma.subjectDomain.findUnique({ where: { slug: "mathematics" } });
+    const firstSkill = learner.skillMastery[0]?.skillId || (await prisma.learningSkill.findFirst({ where: { domainId: mathDomain?.id } }))?.id;
+
+    if (mathDomain && firstSkill) {
+      const savedModule = await prisma.learningModule.create({
+        data: {
+          learnerId: studentId,
+          domainId: mathDomain.id,
+          skillId: firstSkill,
+          title: lesson.title || "Daily Lesson",
+          contentType: "LESSON",
+          stage: learner.developmentalStage,
+          content: JSON.parse(JSON.stringify(lesson)),
+        },
+      });
+      return NextResponse.json({ lesson, lessonId: savedModule.id });
+    }
+
+    return NextResponse.json({ lesson, lessonId: `lesson-${Date.now()}` });
   } catch (error) {
     console.error("Generate lesson error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

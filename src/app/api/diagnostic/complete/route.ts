@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +15,6 @@ export async function POST(request: NextRequest) {
     if (DEMO_MODE) {
       const student = DEMO_STUDENTS.find((s) => s.id === studentId);
       const grade = student?.grade || 5;
-
-      // Return a demo skill profile
       const skillProfile = {
         estimatedLevel: `Grade ${grade} level with some gaps in foundational skills`,
         levelComparison: "Slightly below grade level in some areas, on track in others",
@@ -33,58 +33,69 @@ export async function POST(request: NextRequest) {
         rootCauses: [
           "Incomplete understanding of place value affecting division",
           "Fraction concepts not connected to visual/concrete models",
-          "Word problem reading comprehension needs scaffolding",
         ],
-        recommendedStartingPoint: "Begin with visual fraction models to build number sense, then connect to division concepts",
+        recommendedStartingPoint: "Begin with visual fraction models to build number sense",
       };
-
       return NextResponse.json({ skillProfile });
     }
 
     // Production
-    const { db: prisma } = await import("@/lib/db");
-    const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
-    const { generateSkillProfile } = await import("@/lib/ai");
-
     const token = getTokenFromHeader(request.headers.get("authorization"));
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
-    const student = await prisma.student.findUnique({ where: { id: studentId } });
-    if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    const learner = await prisma.learner.findUnique({ where: { id: studentId }, include: { profile: true } });
+    if (!learner) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
     const responses = await prisma.assessmentResponse.findMany({
       where: { assessmentId },
       include: { skill: true },
     });
 
-    const studentProfile = {
-      id: student.id,
-      name: student.name,
-      age: student.age,
-      grade: student.grade,
-      gradeBand: student.gradeBand,
-      confidenceLevel: student.confidenceLevel,
-      learningPreferences: student.learningPreferences as unknown as any,
-    };
+    // Generate skill profile with AI
+    let skillProfile;
+    try {
+      const { generateSkillProfile } = await import("@/lib/ai");
+      const studentProfile = {
+        id: learner.id,
+        name: learner.name,
+        age: learner.age,
+        grade: learner.grade,
+        gradeBand: learner.developmentalStage,
+        confidenceLevel: learner.profile?.confidenceLevel || 5,
+        learningPreferences: learner.profile?.preferences as any || {},
+      };
 
-    const assessmentData = {
-      responses: responses.map((r) => ({
-        skillId: r.skillId,
-        skillName: r.skill.name,
-        isCorrect: r.isCorrect,
-        timeSpent: r.timeSpent,
-        hintsUsed: r.hintsUsed,
-        confidenceRating: r.confidenceRating,
-        mistakeType: r.mistakeType,
-      })),
-      totalTime: responses.reduce((sum, r) => sum + r.timeSpent, 0),
-      averageConfidence: responses.reduce((sum, r) => sum + r.confidenceRating, 0) / responses.length,
-    };
+      const assessmentData = {
+        responses: responses.map((r) => ({
+          skillId: r.skillId,
+          skillName: r.skill.name,
+          isCorrect: r.isCorrect,
+          timeSpent: r.timeSpent,
+          hintsUsed: r.hintsUsed,
+          confidenceRating: r.confidenceRating,
+          mistakeType: r.mistakeType,
+        })),
+        totalTime: responses.reduce((sum, r) => sum + r.timeSpent, 0),
+        averageConfidence: responses.length > 0 ? responses.reduce((sum, r) => sum + r.confidenceRating, 0) / responses.length : 5,
+      };
 
-    const skillProfile = await generateSkillProfile(studentProfile, assessmentData);
+      skillProfile = await generateSkillProfile(studentProfile, assessmentData);
+    } catch (aiError) {
+      // Fallback if AI fails
+      skillProfile = {
+        estimatedLevel: `Grade ${learner.grade}`,
+        levelComparison: "Assessment complete",
+        masteredSkills: [],
+        developingSkills: [],
+        weakSkills: [],
+        rootCauses: ["Assessment data collected — analysis pending"],
+        recommendedStartingPoint: "Start with foundational skills",
+      };
+    }
 
+    // Update assessment record
     await prisma.assessment.update({
       where: { id: assessmentId },
       data: {

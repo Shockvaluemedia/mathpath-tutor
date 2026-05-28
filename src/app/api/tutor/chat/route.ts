@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, getDemoTutorResponse } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,69 +22,81 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const { db: prisma } = await import("@/lib/db");
-    const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
-    const { tutorChat } = await import("@/lib/ai");
-
     const token = getTokenFromHeader(request.headers.get("authorization"));
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const payload = verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
-    const student = await prisma.student.findUnique({
+    const learner = await prisma.learner.findUnique({
       where: { id: studentId },
-      include: { skillMastery: { include: { skill: true } } },
+      include: { profile: true, skillMastery: { include: { skill: true } } },
     });
-    if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    if (!learner) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
+    // Get or create session
     let session;
     if (sessionId) {
-      session = await prisma.tutorSession.findUnique({ where: { id: sessionId } });
+      session = await prisma.tutoringSession.findUnique({ where: { id: sessionId } });
     }
     if (!session) {
-      session = await prisma.tutorSession.create({
-        data: { studentId, lessonId: lessonId || null, messages: [] },
+      session = await prisma.tutoringSession.create({
+        data: { learnerId: studentId, moduleId: lessonId || null, messages: [] },
       });
     }
 
-    const existingMessages = (session.messages as unknown as any[]) || [];
+    const existingMessages = (session.messages as any[]) || [];
 
-    const context = {
-      studentProfile: {
-        id: student.id,
-        name: student.name,
-        age: student.age,
-        grade: student.grade,
-        gradeBand: student.gradeBand,
-        confidenceLevel: student.confidenceLevel,
-        learningPreferences: student.learningPreferences as unknown as any,
-      },
-      currentLesson: lessonId || undefined,
-      recentMessages: existingMessages,
-      skillsBeingPracticed: student.skillMastery
-        .filter((sm) => sm.status === "DEVELOPING" || sm.status === "PRACTICING")
-        .map((sm) => sm.skill.name),
-    };
+    // Try AI tutoring
+    let tutorResponse: string;
+    let metadata = { frustrationDetected: false, encouragement: false, hintGiven: false };
 
-    const result = await tutorChat(message, context);
+    try {
+      const { tutorChat } = await import("@/lib/ai");
+      const context = {
+        studentProfile: {
+          id: learner.id,
+          name: learner.name,
+          age: learner.age,
+          grade: learner.grade,
+          gradeBand: learner.developmentalStage,
+          confidenceLevel: learner.profile?.confidenceLevel || 5,
+          learningPreferences: learner.profile?.preferences as any || {},
+        },
+        currentLesson: lessonId || undefined,
+        recentMessages: existingMessages,
+        skillsBeingPracticed: learner.skillMastery
+          .filter((sm) => sm.status === "DEVELOPING" || sm.status === "PRACTICING")
+          .map((sm) => sm.skill.name),
+      };
 
+      const result = await tutorChat(message, context);
+      tutorResponse = result.response;
+      metadata = result.metadata;
+    } catch {
+      // Fallback
+      const fallback = getDemoTutorResponse(message);
+      tutorResponse = fallback.response;
+      metadata = fallback.metadata;
+    }
+
+    // Save messages
     const newMessages = [
       ...existingMessages,
       { role: "student", content: message, timestamp: new Date().toISOString() },
-      { role: "tutor", content: result.response, timestamp: new Date().toISOString(), metadata: result.metadata },
+      { role: "tutor", content: tutorResponse, timestamp: new Date().toISOString(), metadata },
     ];
 
-    await prisma.tutorSession.update({
+    await prisma.tutoringSession.update({
       where: { id: session.id },
       data: {
         messages: JSON.parse(JSON.stringify(newMessages)),
-        frustrationDetected: session.frustrationDetected || result.metadata.frustrationDetected,
+        frustrationDetected: session.frustrationDetected || metadata.frustrationDetected,
       },
     });
 
     return NextResponse.json({
-      response: result.response,
-      metadata: result.metadata,
+      response: tutorResponse,
+      metadata,
       sessionId: session.id,
     });
   } catch (error) {
