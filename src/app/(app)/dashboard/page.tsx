@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
+import { StudentStatusCard } from "@/components/dashboard/student-status-card";
 import {
   TrendingUp, TrendingDown, Minus, Clock, BookOpen, Brain, Target,
   Plus, BarChart3, Heart, RefreshCw
@@ -138,7 +139,35 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <div className="space-y-8">
-          {students.map((student) => (
+          {/* Student Status Overview */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Your Students</h2>
+            <div className="space-y-3">
+              {students.map((student) => {
+                const progress = progressData[student.id];
+                const hasLessons = (progress?.stats?.totalLessons || 0) > 0;
+                const diagnosticStatus = hasLessons ? "completed" as const
+                  : progress?.stats?.lessonsCompletedThisWeek === 0 && !hasLessons ? "not_started" as const
+                  : "not_started" as const;
+
+                return (
+                  <StudentStatusCard
+                    key={student.id}
+                    student={student}
+                    diagnosticStatus={diagnosticStatus}
+                    lastActiveAt={progress?.recentLessons?.[0]?.date || null}
+                    lessonsCompleted={progress?.stats?.totalLessons || 0}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Detailed Progress (only for students who have completed diagnostic) */}
+          {students.filter((s) => {
+            const p = progressData[s.id];
+            return p && (p.stats?.totalLessons || 0) > 0;
+          }).map((student) => (
             <StudentDashboard
               key={student.id}
               student={student}
