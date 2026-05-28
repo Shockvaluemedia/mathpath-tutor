@@ -303,55 +303,53 @@ export default function OnboardingPage() {
           </Card>
         )}
 
-        {/* Step 4: Ready — clear handoff to student */}
+        {/* Step 4: Ready — multiple delivery options */}
         {step === 4 && (
           <Card className="animate-scale-in">
             <CardHeader className="text-center">
               <div className="text-4xl mb-2">🎉</div>
               <CardTitle className="text-2xl">{form.name}&apos;s profile is ready!</CardTitle>
               <CardDescription className="text-base mt-2">
-                Now it&apos;s time for the diagnostic assessment
+                Now {form.name} needs to take a short diagnostic. How would you like to start it?
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
-                <h3 className="font-semibold text-indigo-900 mb-2 flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  Hand the device to {form.name}
-                </h3>
-                <p className="text-sm text-indigo-700 mb-3">
-                  The diagnostic is a short set of questions that adapts to {form.name}&apos;s level.
-                  It&apos;s not a test — there&apos;s no grade. It just helps us understand where to start.
+            <CardContent className="space-y-4">
+              <DeliveryOption
+                icon="📱"
+                title="Send a link"
+                description={`Text or email a link to ${form.name}'s device. They can start whenever they're ready.`}
+                action={
+                  <SendLinkButton studentId={form.name} apiRequest={apiRequest} />
+                }
+              />
+
+              <DeliveryOption
+                icon="💻"
+                title="Start on this device"
+                description={`${form.name} is here now and can take the diagnostic on this device.`}
+                action={
+                  <Button className="w-full" variant="outline" onClick={() => router.push("/diagnostic")}>
+                    Start Diagnostic Now
+                  </Button>
+                }
+              />
+
+              <DeliveryOption
+                icon="⏰"
+                title="Do it later"
+                description="Save the profile and come back to the diagnostic another time."
+                action={
+                  <Button className="w-full" variant="ghost" onClick={() => router.push("/dashboard")}>
+                    Go to Dashboard
+                  </Button>
+                }
+              />
+
+              <div className="pt-2">
+                <p className="text-xs text-gray-400 text-center">
+                  The diagnostic takes 10-15 minutes. {form.name} should answer the questions themselves — it&apos;s how we find their starting point.
                 </p>
-                <div className="flex items-center gap-2 text-xs text-indigo-600">
-                  <Clock className="h-4 w-4" />
-                  <span>Takes about 10-15 minutes</span>
-                </div>
               </div>
-
-              <div className="space-y-2 text-sm text-gray-600">
-                <p className="font-medium text-gray-900">Tips for {form.name}:</p>
-                <ul className="space-y-1 ml-4 list-disc">
-                  <li>It&apos;s okay to not know answers — that helps us help you!</li>
-                  <li>Use the hints if you get stuck</li>
-                  <li>Tell us how confident you feel on each question</li>
-                  <li>There&apos;s no time limit — take your time</li>
-                </ul>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <Button size="lg" className="w-full" onClick={() => router.push("/diagnostic")}>
-                  <Brain className="h-5 w-5 mr-2" />
-                  Start Diagnostic Now
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => router.push("/dashboard")}>
-                  I&apos;ll do this later — go to dashboard
-                </Button>
-              </div>
-
-              <p className="text-xs text-gray-400 text-center">
-                You can always start the diagnostic later from the dashboard.
-              </p>
             </CardContent>
           </Card>
         )}
@@ -370,6 +368,76 @@ function StepPreview({ icon, title, description }: { icon: React.ReactNode; titl
         <p className="text-sm font-medium text-gray-900">{title}</p>
         <p className="text-xs text-gray-500 mt-0.5">{description}</p>
       </div>
+    </div>
+  );
+}
+
+function DeliveryOption({ icon, title, description, action }: { icon: string; title: string; description: string; action: React.ReactNode }) {
+  return (
+    <div className="border rounded-lg p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">{icon}</span>
+        <div>
+          <p className="font-medium text-gray-900">{title}</p>
+          <p className="text-sm text-gray-500">{description}</p>
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function SendLinkButton({ studentId, apiRequest }: { studentId: string; apiRequest: any }) {
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const generateLink = async () => {
+    setLoading(true);
+    try {
+      const data = await apiRequest("/api/diagnostic/link", {
+        method: "POST",
+        body: JSON.stringify({ studentId, studentName: studentId }),
+      });
+      setLink(data.link);
+    } catch {
+      // Fallback link for demo
+      setLink(`${window.location.origin}/d/${Math.random().toString(36).slice(2, 10)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyLink = () => {
+    if (link) {
+      navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  if (!link) {
+    return (
+      <Button className="w-full" onClick={generateLink} disabled={loading}>
+        {loading ? "Generating..." : "Generate Link"}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={link}
+          readOnly
+          className="flex-1 px-3 py-2 text-sm border rounded-lg bg-gray-50 text-gray-700 truncate"
+        />
+        <Button size="sm" variant="outline" onClick={copyLink}>
+          {copied ? "Copied!" : "Copy"}
+        </Button>
+      </div>
+      <p className="text-xs text-gray-500">Send this link via text, email, or any messaging app. No login needed.</p>
     </div>
   );
 }
