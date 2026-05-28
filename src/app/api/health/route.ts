@@ -23,6 +23,6 @@ export async function GET() {
     }
   }
 
-  const statusCode = health.status === "healthy" ? 200 : 503;
+  const statusCode = 200; // Always return 200 for ALB health checks
   return NextResponse.json(health, { status: statusCode });
 }

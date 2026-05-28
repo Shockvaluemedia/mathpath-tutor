@@ -202,20 +202,6 @@
     "aws:cdk:path": "MathPathTutor/JwtSecret/Resource"
    }
   },
-  "AppRepoB478A890": {
-   "Type": "AWS::ECR::Repository",
-   "Properties": {
-    "LifecyclePolicy": {
-     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}"
-    },
-    "RepositoryName": "mathpath-tutor"
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppRepo/Resource"
-   }
-  },
   "ClusterEB0386A7": {
    "Type": "AWS::ECS::Cluster",
    "Properties": {
@@ -468,7 +454,18 @@
        }
       ],
       "Essential": true,
-      "Image": "amazon/amazon-ecs-sample",
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "958972795537.dkr.ecr.us-east-1.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/mathpath-tutor:latest"
+        ]
+       ]
+      },
       "LogConfiguration": {
        "LogDriver": "awslogs",
        "Options": {
@@ -551,6 +548,31 @@
    "Properties": {
     "PolicyDocument": {
      "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:us-east-1:958972795537:repository/mathpath-tutor"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
       {
        "Action": [
         "logs:CreateLogStream",
@@ -783,7 +805,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31STU/DMAz9Ldy7AJUmzrABQpoEWndHbmpKWJZUsTOEpv53nHQfZSBOtt97Tp6dlKqc3qirC/ikiW7WE2tqtasY9LpYIvkYNBbCve5Ql0KgjsHw12PwsStmb+5/4Mm1AYl+4fcZ7gtCHZBpAw5aDPl4qffylA1hBaFFvmVx9b5BNxKcM30RGlK7OTDUQPjkiMHJBFWsHfLR5PzuF3CQ9oUcrHZL7DwZ9uEr0acq0XLBzEZiDIk7pA9iBRhXQOs5vhln2HiXBOeIdwzGYRhh+94Kw9aI2zzekFYaLNQ2HzvzMU1oYCP+vM26HF+8NTobHbK+sL4VlwvfHic85HmA1w5YPDtSt10nHZBcLDw0d3KbLKE5M4QWiI22oqizwrh2K9/h7+4w3Deqxzoj23J7zSEf8cOLHm2Pyr6Akwwie5LdiBH5NsclJXFe309kCKsgv1oaqqHvtLUfQN8n6DlyF2XZzjeoPuhyW05Vqa4vPsiYSZB3MBtUyyF+A9j+0g5DAwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SwU7DMAz9Fu5dgEqIM9sATZoEWndHbmpKtiypYmdomvrvOO02ug1xsv38bD87yVX+8KjubuCbRrpaj6wp1b5g0OtsgeRj0JhJ7mOPOpcE6hgM716Dj002+XT/AzNXByS6wp87uM0IdUCmDTioMXTtJT7Qk9ebJYQa+YlF1dcG3YBwmWmzUJHaT4GhBMKZIwYnGxSxdMgnkdPxFXCktpk0VgtsPBn2YTeWNgJJ04mNxBgS/ei+yHhgXAKtp/hpnGHjXSJcIt4xGIdhgB1qCwxbIwq7lXq30GChtF3biY9pKwMbtV942/E6++6t0bsU9l6bWV+LyrmvT1sd/bQTfTTAotmRemoaqYCkYu6hGss0Wby6EIQWiI22wig7hnH1Vr7A39WhnzeIhzwj13IHztEf5PtXPMkehG0GvzSI7EluI0Lkq5yOlMjd+c6R3iyD/GQpKPq636udAW2boLfITZRjO1+hWtHtNn9Qubq/WZExoyDvYDaoFr39AXkwnr43AwAA"
    },
    "Metadata": {
     "aws:cdk:path": "MathPathTutor/CDKMetadata/Default"
@@ -839,47 +861,11 @@
     "Fn::Join": [
      "",
      [
-      {
-       "Fn::Select": [
-        4,
-        {
-         "Fn::Split": [
-          ":",
-          {
-           "Fn::GetAtt": [
-            "AppRepoB478A890",
-            "Arn"
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      ".dkr.ecr.",
-      {
-       "Fn::Select": [
-        3,
-        {
-         "Fn::Split": [
-          ":",
-          {
-           "Fn::GetAtt": [
-            "AppRepoB478A890",
-            "Arn"
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      ".",
+      "958972795537.dkr.ecr.us-east-1.",
       {
        "Ref": "AWS::URLSuffix"
       },
-      "/",
-      {
-       "Ref": "AppRepoB478A890"
-      }
+      "/mathpath-tutor"
      ]
     ]
    }

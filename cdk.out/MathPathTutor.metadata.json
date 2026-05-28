@@ -17,7 +17,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:165:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:160:5)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -32,7 +32,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:170:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:165:5)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -47,7 +47,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:175:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:170:5)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -62,7 +62,7 @@
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:180:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:175:5)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -136,7 +136,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...Connections.allowFrom in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:162:26)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:157:26)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
       ]
     }
@@ -205,22 +205,6 @@
       ]
     }
   ],
-  "/MathPathTutor/AppRepo/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppRepoB478A890"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new Repository2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:73:24)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
   "/MathPathTutor/Cluster/Resource": [
     {
       "type": "aws:cdk:logicalId",
@@ -230,7 +214,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new Cluster2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:80:21)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:76:21)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -246,7 +230,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new Role2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:86:22)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:82:22)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -262,7 +246,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new LogGroup2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:131:21)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:126:21)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -278,7 +262,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -294,7 +278,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -314,7 +298,7 @@
         "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
         "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs-patterns/lib/fargate/application-load-balanced-fargate-service.js:1:6392)",
         "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "Object.<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "Module._compile (node:internal/modules/cjs/loader:1760:14)",
@@ -342,7 +326,7 @@
         "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
         "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs-patterns/lib/fargate/application-load-balanced-fargate-service.js:1:6392)",
         "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "Object.<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "Module._compile (node:internal/modules/cjs/loader:1760:14)",
@@ -413,7 +397,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...WrappedClass.<anonymous> in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:91:14)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:87:14)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)"
       ]
@@ -428,7 +412,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals..."
@@ -444,7 +428,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals..."
@@ -460,7 +444,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals..."
@@ -476,7 +460,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
       ]
     }
@@ -529,7 +513,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
       ]
     }
@@ -556,7 +540,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:28)"
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)"
       ]
     }
   ],
@@ -582,7 +566,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...WrappedClass.autoScaleTaskCount in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:153:44)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:148:44)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals..."
@@ -598,7 +582,7 @@
       "type": "aws:cdk:creationStack",
       "data": [
         "...ScalableTaskCount.scaleOnCpuUtilization in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:157:13)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:152:13)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."

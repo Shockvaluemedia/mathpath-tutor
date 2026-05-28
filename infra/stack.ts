@@ -69,12 +69,8 @@ export class MathPathStack extends cdk.Stack {
       },
     });
 
-    // ─── ECR Repository ────────────────────────────────────
-    const repository = new ecr.Repository(this, "AppRepo", {
-      repositoryName: "mathpath-tutor",
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      lifecycleRules: [{ maxImageCount: 10 }],
-    });
+    // ─── ECR Repository (already exists) ─────────────────
+    const repository = ecr.Repository.fromRepositoryName(this, "AppRepo", "mathpath-tutor");
 
     // ─── ECS Cluster ───────────────────────────────────────
     const cluster = new ecs.Cluster(this, "Cluster", {
@@ -106,8 +102,7 @@ export class MathPathStack extends cdk.Stack {
       memoryLimitMiB: 1024,
       desiredCount: 1,
       taskImageOptions: {
-        // Use placeholder image initially; CI/CD will update
-        image: ecs.ContainerImage.fromRegistry("amazon/amazon-ecs-sample"),
+        image: ecs.ContainerImage.fromEcrRepository(repository, "latest"),
         containerPort: 3000,
         taskRole,
         environment: {
