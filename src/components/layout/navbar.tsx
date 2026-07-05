@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StudentSwitcher } from "@/components/layout/student-switcher";
 import { XPBar } from "@/components/layout/xp-bar";
-import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, History, Trophy, RotateCcw, CreditCard, BarChart3, Compass, Building2, AlertTriangle } from "lucide-react";
+import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, Trophy, RotateCcw, CreditCard, BarChart3, Compass, Building2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {

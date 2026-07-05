@@ -1,9 +1,9 @@
 {
  "Resources": {
-  "DbSg495F8305": {
+  "TestInstanceSg90BDF2EC": {
    "Type": "AWS::EC2::SecurityGroup",
    "Properties": {
-    "GroupDescription": "MathPath RDS security group",
+    "GroupDescription": "MathPath low-cost test instance security group",
     "SecurityGroupEgress": [
      {
       "CidrIp": "0.0.0.0/0",
@@ -11,207 +11,22 @@
       "IpProtocol": "-1"
      }
     ],
-    "VpcId": "vpc-0cd11120d9a965bf5"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/DbSg/Resource"
-   }
-  },
-  "DbSgfromMathPathTutorAppSg76FC290D5432E737806A": {
-   "Type": "AWS::EC2::SecurityGroupIngress",
-   "Properties": {
-    "Description": "Allow ECS to RDS",
-    "FromPort": 5432,
-    "GroupId": {
-     "Fn::GetAtt": [
-      "DbSg495F8305",
-      "GroupId"
-     ]
-    },
-    "IpProtocol": "tcp",
-    "SourceSecurityGroupId": {
-     "Fn::GetAtt": [
-      "AppSg898BCA4E",
-      "GroupId"
-     ]
-    },
-    "ToPort": 5432
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/DbSg/from MathPathTutorAppSg76FC290D:5432"
-   }
-  },
-  "DbSgfromMathPathTutorAppServiceSecurityGroupCA9ADDB754327B13BF8A": {
-   "Type": "AWS::EC2::SecurityGroupIngress",
-   "Properties": {
-    "Description": "from MathPathTutorAppServiceSecurityGroupCA9ADDB7:5432",
-    "FromPort": 5432,
-    "GroupId": {
-     "Fn::GetAtt": [
-      "DbSg495F8305",
-      "GroupId"
-     ]
-    },
-    "IpProtocol": "tcp",
-    "SourceSecurityGroupId": {
-     "Fn::GetAtt": [
-      "AppServiceSecurityGroup8261DDA4",
-      "GroupId"
-     ]
-    },
-    "ToPort": 5432
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/DbSg/from MathPathTutorAppServiceSecurityGroupCA9ADDB7:5432"
-   }
-  },
-  "AppSg898BCA4E": {
-   "Type": "AWS::EC2::SecurityGroup",
-   "Properties": {
-    "GroupDescription": "MathPath ECS security group",
-    "SecurityGroupEgress": [
+    "SecurityGroupIngress": [
      {
       "CidrIp": "0.0.0.0/0",
-      "Description": "Allow all outbound traffic by default",
-      "IpProtocol": "-1"
+      "Description": "Allow HTTP for testers",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
      }
     ],
     "VpcId": "vpc-0cd11120d9a965bf5"
    },
    "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppSg/Resource"
+    "aws:cdk:path": "MathPathTutor/TestInstanceSg/Resource"
    }
   },
-  "DbCredentials798065DE": {
-   "Type": "AWS::SecretsManager::Secret",
-   "Properties": {
-    "GenerateSecretString": {
-     "ExcludePunctuation": true,
-     "GenerateStringKey": "password",
-     "PasswordLength": 32,
-     "SecretStringTemplate": "{\"username\":\"mathpath\"}"
-    },
-    "Name": "mathpath/db-credentials"
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/DbCredentials/Resource"
-   }
-  },
-  "DbCredentialsAttachmentD2151D4F": {
-   "Type": "AWS::SecretsManager::SecretTargetAttachment",
-   "Properties": {
-    "SecretId": {
-     "Ref": "DbCredentials798065DE"
-    },
-    "TargetId": {
-     "Ref": "DatabaseB269D8BB"
-    },
-    "TargetType": "AWS::RDS::DBInstance"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/DbCredentials/Attachment/Resource"
-   }
-  },
-  "DatabaseSubnetGroup7D60F180": {
-   "Type": "AWS::RDS::DBSubnetGroup",
-   "Properties": {
-    "DBSubnetGroupDescription": "Subnet group for Database database",
-    "SubnetIds": [
-     "subnet-051997d5e3021cd30",
-     "subnet-07feb2a3e64e6a874",
-     "subnet-01bb36fd212737e9c",
-     "subnet-02e05e268c6008a91",
-     "subnet-057e3bb4e167bcbc4",
-     "subnet-036b0e2486a44fca2"
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/Database/SubnetGroup/Default"
-   }
-  },
-  "DatabaseB269D8BB": {
-   "Type": "AWS::RDS::DBInstance",
-   "Properties": {
-    "AllocatedStorage": "20",
-    "BackupRetentionPeriod": 7,
-    "CopyTagsToSnapshot": true,
-    "DBInstanceClass": "db.t3.micro",
-    "DBName": "mathpath_tutor",
-    "DBSubnetGroupName": {
-     "Ref": "DatabaseSubnetGroup7D60F180"
-    },
-    "DeletionProtection": false,
-    "Engine": "postgres",
-    "EngineVersion": "16",
-    "MasterUserPassword": {
-     "Fn::Join": [
-      "",
-      [
-       "{{resolve:secretsmanager:",
-       {
-        "Ref": "DbCredentials798065DE"
-       },
-       ":SecretString:password::}}"
-      ]
-     ]
-    },
-    "MasterUsername": {
-     "Fn::Join": [
-      "",
-      [
-       "{{resolve:secretsmanager:",
-       {
-        "Ref": "DbCredentials798065DE"
-       },
-       ":SecretString:username::}}"
-      ]
-     ]
-    },
-    "MaxAllocatedStorage": 50,
-    "PubliclyAccessible": true,
-    "StorageType": "gp2",
-    "VPCSecurityGroups": [
-     {
-      "Fn::GetAtt": [
-       "DbSg495F8305",
-       "GroupId"
-      ]
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/Database/Resource"
-   }
-  },
-  "JwtSecretB8834B39": {
-   "Type": "AWS::SecretsManager::Secret",
-   "Properties": {
-    "GenerateSecretString": {
-     "ExcludePunctuation": true,
-     "PasswordLength": 64
-    },
-    "Name": "mathpath/jwt-secret"
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/JwtSecret/Resource"
-   }
-  },
-  "ClusterEB0386A7": {
-   "Type": "AWS::ECS::Cluster",
-   "Properties": {
-    "ClusterName": "mathpath-cluster"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/Cluster/Resource"
-   }
-  },
-  "TaskRole30FC0FBB": {
+  "TestInstanceRole5518C8D3": {
    "Type": "AWS::IAM::Role",
    "Properties": {
     "AssumeRolePolicyDocument": {
@@ -220,19 +35,44 @@
        "Action": "sts:AssumeRole",
        "Effect": "Allow",
        "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
+        "Service": "ec2.amazonaws.com"
        }
       }
      ],
      "Version": "2012-10-17"
     },
-    "RoleName": "mathpath-task-role"
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonSSMManagedInstanceCore"
+       ]
+      ]
+     }
+    ]
    },
    "Metadata": {
-    "aws:cdk:path": "MathPathTutor/TaskRole/Resource"
+    "aws:cdk:path": "MathPathTutor/TestInstanceRole/Resource"
    }
   },
-  "TaskRoleDefaultPolicy07FC53DE": {
+  "TestInstanceRoleDefaultPolicyC7EABD87": {
    "Type": "AWS::IAM::Policy",
    "Properties": {
     "PolicyDocument": {
@@ -244,584 +84,115 @@
        ],
        "Effect": "Allow",
        "Resource": "*"
-      },
-      {
-       "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
       }
      ],
      "Version": "2012-10-17"
     },
-    "PolicyName": "TaskRoleDefaultPolicy07FC53DE",
+    "PolicyName": "TestInstanceRoleDefaultPolicyC7EABD87",
     "Roles": [
      {
-      "Ref": "TaskRole30FC0FBB"
+      "Ref": "TestInstanceRole5518C8D3"
      }
     ]
    },
    "Metadata": {
-    "aws:cdk:path": "MathPathTutor/TaskRole/DefaultPolicy/Resource"
+    "aws:cdk:path": "MathPathTutor/TestInstanceRole/DefaultPolicy/Resource"
    }
   },
-  "AppLogsC5DF83A6": {
-   "Type": "AWS::Logs::LogGroup",
+  "TestInstanceInstanceProfileD0E25910": {
+   "Type": "AWS::IAM::InstanceProfile",
    "Properties": {
-    "LogGroupName": "/ecs/mathpath-tutor",
-    "RetentionInDays": 14
-   },
-   "UpdateReplacePolicy": "Delete",
-   "DeletionPolicy": "Delete",
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppLogs/Resource"
-   }
-  },
-  "AppServiceLB2EFD717F": {
-   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
-   "Properties": {
-    "LoadBalancerAttributes": [
+    "Roles": [
      {
-      "Key": "deletion_protection.enabled",
-      "Value": "false"
+      "Ref": "TestInstanceRole5518C8D3"
      }
-    ],
-    "Scheme": "internet-facing",
-    "SecurityGroups": [
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "MathPathTutor/TestInstance/InstanceProfile"
+   }
+  },
+  "TestInstance44016A9E4705221e70fcd73d": {
+   "Type": "AWS::EC2::Instance",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "IamInstanceProfile": {
+     "Ref": "TestInstanceInstanceProfileD0E25910"
+    },
+    "ImageId": {
+     "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter"
+    },
+    "InstanceType": "t3.micro",
+    "SecurityGroupIds": [
      {
       "Fn::GetAtt": [
-       "AppServiceLBSecurityGroupB5DEF339",
+       "TestInstanceSg90BDF2EC",
        "GroupId"
       ]
      }
     ],
-    "Subnets": [
-     "subnet-051997d5e3021cd30",
-     "subnet-07feb2a3e64e6a874",
-     "subnet-01bb36fd212737e9c",
-     "subnet-02e05e268c6008a91",
-     "subnet-057e3bb4e167bcbc4",
-     "subnet-036b0e2486a44fca2"
-    ],
-    "Type": "application"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/LB/Resource"
-   }
-  },
-  "AppServiceLBSecurityGroupB5DEF339": {
-   "Type": "AWS::EC2::SecurityGroup",
-   "Properties": {
-    "GroupDescription": "Automatically created Security Group for ELB MathPathTutorAppServiceLBC7FED6BB",
-    "SecurityGroupIngress": [
+    "SubnetId": "subnet-051997d5e3021cd30",
+    "Tags": [
      {
-      "CidrIp": "0.0.0.0/0",
-      "Description": "Allow from anyone on port 80",
-      "FromPort": 80,
-      "IpProtocol": "tcp",
-      "ToPort": 80
+      "Key": "Name",
+      "Value": "MathPathTutor/TestInstance"
      }
     ],
-    "VpcId": "vpc-0cd11120d9a965bf5"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/LB/SecurityGroup/Resource"
-   }
-  },
-  "AppServiceLBSecurityGrouptoMathPathTutorAppServiceSecurityGroupCA9ADDB730002FF89FE3": {
-   "Type": "AWS::EC2::SecurityGroupEgress",
-   "Properties": {
-    "Description": "Load balancer to target",
-    "DestinationSecurityGroupId": {
-     "Fn::GetAtt": [
-      "AppServiceSecurityGroup8261DDA4",
-      "GroupId"
-     ]
-    },
-    "FromPort": 3000,
-    "GroupId": {
-     "Fn::GetAtt": [
-      "AppServiceLBSecurityGroupB5DEF339",
-      "GroupId"
-     ]
-    },
-    "IpProtocol": "tcp",
-    "ToPort": 3000
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/LB/SecurityGroup/to MathPathTutorAppServiceSecurityGroupCA9ADDB7:3000"
-   }
-  },
-  "AppServiceLBPublicListenerB6FF7149": {
-   "Type": "AWS::ElasticLoadBalancingV2::Listener",
-   "Properties": {
-    "DefaultActions": [
-     {
-      "TargetGroupArn": {
-       "Ref": "AppServiceLBPublicListenerECSGroup41DB273F"
-      },
-      "Type": "forward"
-     }
-    ],
-    "LoadBalancerArn": {
-     "Ref": "AppServiceLB2EFD717F"
-    },
-    "Port": 80,
-    "Protocol": "HTTP"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/LB/PublicListener/Resource"
-   }
-  },
-  "AppServiceLBPublicListenerECSGroup41DB273F": {
-   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-   "Properties": {
-    "HealthCheckIntervalSeconds": 30,
-    "HealthCheckPath": "/api/health",
-    "HealthCheckTimeoutSeconds": 10,
-    "HealthyThresholdCount": 2,
-    "Matcher": {
-     "HttpCode": "200"
-    },
-    "Port": 80,
-    "Protocol": "HTTP",
-    "TargetGroupAttributes": [
-     {
-      "Key": "stickiness.enabled",
-      "Value": "false"
-     }
-    ],
-    "TargetType": "ip",
-    "UnhealthyThresholdCount": 3,
-    "VpcId": "vpc-0cd11120d9a965bf5"
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/LB/PublicListener/ECSGroup/Resource"
-   }
-  },
-  "AppServiceTaskDefD07EA99B": {
-   "Type": "AWS::ECS::TaskDefinition",
-   "Properties": {
-    "ContainerDefinitions": [
-     {
-      "Environment": [
-       {
-        "Name": "NODE_ENV",
-        "Value": "production"
-       },
-       {
-        "Name": "PORT",
-        "Value": "3000"
-       },
-       {
-        "Name": "AI_PROVIDER",
-        "Value": "bedrock"
-       },
-       {
-        "Name": "AI_MODEL",
-        "Value": "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-       },
-       {
-        "Name": "AWS_REGION",
-        "Value": "us-east-1"
-       },
-       {
-        "Name": "NEXT_PUBLIC_DEMO_MODE",
-        "Value": "false"
-       },
-       {
-        "Name": "NEXT_PUBLIC_APP_URL",
-        "Value": "http://placeholder.com"
-       },
-       {
-        "Name": "DB_HOST",
-        "Value": {
-         "Fn::GetAtt": [
-          "DatabaseB269D8BB",
-          "Endpoint.Address"
-         ]
-        }
-       },
-       {
-        "Name": "DB_PORT",
-        "Value": "5432"
-       },
-       {
-        "Name": "DB_NAME",
-        "Value": "mathpath_tutor"
-       }
-      ],
-      "Essential": true,
-      "Image": {
-       "Fn::Join": [
-        "",
-        [
-         "958972795537.dkr.ecr.us-east-1.",
-         {
-          "Ref": "AWS::URLSuffix"
-         },
-         "/mathpath-tutor:latest"
-        ]
-       ]
-      },
-      "LogConfiguration": {
-       "LogDriver": "awslogs",
-       "Options": {
-        "awslogs-group": {
-         "Ref": "AppLogsC5DF83A6"
+    "UserData": {
+     "Fn::Base64": {
+      "Fn::Join": [
+       "",
+       [
+        "#!/bin/bash\nset -eux\ndnf update -y\ndnf install -y docker awscli\nsystemctl enable --now docker\nTOKEN=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600' || true)\nPUBLIC_HOSTNAME=$(curl -fsS -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/public-hostname || true)\nAPP_URL=http://$PUBLIC_HOSTNAME\naws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 958972795537.dkr.ecr.us-east-1.amazonaws.com\ndocker pull 958972795537.dkr.ecr.us-east-1.",
+        {
+         "Ref": "AWS::URLSuffix"
         },
-        "awslogs-stream-prefix": "mathpath",
-        "awslogs-region": "us-east-1"
-       }
-      },
-      "Name": "web",
-      "PortMappings": [
-       {
-        "ContainerPort": 3000,
-        "Protocol": "tcp"
-       }
-      ],
-      "Secrets": [
-       {
-        "Name": "DB_SECRET",
-        "ValueFrom": {
-         "Ref": "DbCredentials798065DE"
-        }
-       },
-       {
-        "Name": "JWT_SECRET",
-        "ValueFrom": {
-         "Ref": "JwtSecretB8834B39"
-        }
-       }
+        "/mathpath-tutor:cleanup-20260705212913\ndocker rm -f mathpath-tutor || true\ndocker run -d --restart unless-stopped --name mathpath-tutor -p 80:3000 -e NODE_ENV=production -e PORT=3000 -e AI_PROVIDER=bedrock -e AI_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0 -e AI_MAX_TOKENS=1200 -e AWS_REGION=us-east-1 -e NEXT_PUBLIC_DEMO_MODE=true -e NEXT_PUBLIC_APP_URL=$APP_URL 958972795537.dkr.ecr.us-east-1.",
+        {
+         "Ref": "AWS::URLSuffix"
+        },
+        "/mathpath-tutor:cleanup-20260705212913"
+       ]
       ]
      }
-    ],
-    "Cpu": "512",
-    "ExecutionRoleArn": {
-     "Fn::GetAtt": [
-      "AppServiceTaskDefExecutionRoleD1C756A8",
-      "Arn"
-     ]
-    },
-    "Family": "MathPathTutorAppServiceTaskDef1DA5AB8C",
-    "Memory": "1024",
-    "NetworkMode": "awsvpc",
-    "RequiresCompatibilities": [
-     "FARGATE"
-    ],
-    "TaskRoleArn": {
-     "Fn::GetAtt": [
-      "TaskRole30FC0FBB",
-      "Arn"
-     ]
-    }
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/TaskDef/Resource"
-   }
-  },
-  "AppServiceTaskDefExecutionRoleD1C756A8": {
-   "Type": "AWS::IAM::Role",
-   "Properties": {
-    "AssumeRolePolicyDocument": {
-     "Statement": [
-      {
-       "Action": "sts:AssumeRole",
-       "Effect": "Allow",
-       "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
-       }
-      }
-     ],
-     "Version": "2012-10-17"
-    }
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/TaskDef/ExecutionRole/Resource"
-   }
-  },
-  "AppServiceTaskDefExecutionRoleDefaultPolicy1C514EB9": {
-   "Type": "AWS::IAM::Policy",
-   "Properties": {
-    "PolicyDocument": {
-     "Statement": [
-      {
-       "Action": [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:",
-          {
-           "Ref": "AWS::Partition"
-          },
-          ":ecr:us-east-1:958972795537:repository/mathpath-tutor"
-         ]
-        ]
-       }
-      },
-      {
-       "Action": "ecr:GetAuthorizationToken",
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
-         "AppLogsC5DF83A6",
-         "Arn"
-        ]
-       }
-      },
-      {
-       "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Ref": "DbCredentials798065DE"
-       }
-      },
-      {
-       "Action": [
-        "secretsmanager:GetSecretValue",
-        "secretsmanager:DescribeSecret"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Ref": "JwtSecretB8834B39"
-       }
-      }
-     ],
-     "Version": "2012-10-17"
-    },
-    "PolicyName": "AppServiceTaskDefExecutionRoleDefaultPolicy1C514EB9",
-    "Roles": [
-     {
-      "Ref": "AppServiceTaskDefExecutionRoleD1C756A8"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/TaskDef/ExecutionRole/DefaultPolicy/Resource"
-   }
-  },
-  "AppService7F8F0CA1": {
-   "Type": "AWS::ECS::Service",
-   "Properties": {
-    "Cluster": {
-     "Ref": "ClusterEB0386A7"
-    },
-    "DeploymentConfiguration": {
-     "Alarms": {
-      "AlarmNames": [],
-      "Enable": false,
-      "Rollback": false
-     },
-     "MaximumPercent": 200,
-     "MinimumHealthyPercent": 50
-    },
-    "DesiredCount": 1,
-    "EnableECSManagedTags": false,
-    "HealthCheckGracePeriodSeconds": 60,
-    "LaunchType": "FARGATE",
-    "LoadBalancers": [
-     {
-      "ContainerName": "web",
-      "ContainerPort": 3000,
-      "TargetGroupArn": {
-       "Ref": "AppServiceLBPublicListenerECSGroup41DB273F"
-      }
-     }
-    ],
-    "NetworkConfiguration": {
-     "AwsvpcConfiguration": {
-      "AssignPublicIp": "ENABLED",
-      "SecurityGroups": [
-       {
-        "Fn::GetAtt": [
-         "AppServiceSecurityGroup8261DDA4",
-         "GroupId"
-        ]
-       }
-      ],
-      "Subnets": [
-       "subnet-051997d5e3021cd30",
-       "subnet-07feb2a3e64e6a874",
-       "subnet-01bb36fd212737e9c",
-       "subnet-02e05e268c6008a91",
-       "subnet-057e3bb4e167bcbc4",
-       "subnet-036b0e2486a44fca2"
-      ]
-     }
-    },
-    "ServiceName": "mathpath-tutor-service",
-    "TaskDefinition": {
-     "Ref": "AppServiceTaskDefD07EA99B"
     }
    },
    "DependsOn": [
-    "AppServiceLBPublicListenerECSGroup41DB273F",
-    "AppServiceLBPublicListenerB6FF7149",
-    "TaskRoleDefaultPolicy07FC53DE",
-    "TaskRole30FC0FBB"
+    "TestInstanceRoleDefaultPolicyC7EABD87",
+    "TestInstanceRole5518C8D3"
    ],
    "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/Service/Service"
-   }
-  },
-  "AppServiceSecurityGroup8261DDA4": {
-   "Type": "AWS::EC2::SecurityGroup",
-   "Properties": {
-    "GroupDescription": "MathPathTutor/AppService/Service/SecurityGroup",
-    "SecurityGroupEgress": [
-     {
-      "CidrIp": "0.0.0.0/0",
-      "Description": "Allow all outbound traffic by default",
-      "IpProtocol": "-1"
-     }
-    ],
-    "VpcId": "vpc-0cd11120d9a965bf5"
-   },
-   "DependsOn": [
-    "TaskRoleDefaultPolicy07FC53DE",
-    "TaskRole30FC0FBB"
-   ],
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/Service/SecurityGroup/Resource"
-   }
-  },
-  "AppServiceSecurityGroupfromMathPathTutorAppServiceLBSecurityGroup39E18A09300083802CBF": {
-   "Type": "AWS::EC2::SecurityGroupIngress",
-   "Properties": {
-    "Description": "Load balancer to target",
-    "FromPort": 3000,
-    "GroupId": {
-     "Fn::GetAtt": [
-      "AppServiceSecurityGroup8261DDA4",
-      "GroupId"
-     ]
-    },
-    "IpProtocol": "tcp",
-    "SourceSecurityGroupId": {
-     "Fn::GetAtt": [
-      "AppServiceLBSecurityGroupB5DEF339",
-      "GroupId"
-     ]
-    },
-    "ToPort": 3000
-   },
-   "DependsOn": [
-    "TaskRoleDefaultPolicy07FC53DE",
-    "TaskRole30FC0FBB"
-   ],
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/Service/SecurityGroup/from MathPathTutorAppServiceLBSecurityGroup39E18A09:3000"
-   }
-  },
-  "AppServiceTaskCountTargetD4FF4F2B": {
-   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
-   "Properties": {
-    "MaxCapacity": 4,
-    "MinCapacity": 1,
-    "ResourceId": {
-     "Fn::Join": [
-      "",
-      [
-       "service/",
-       {
-        "Ref": "ClusterEB0386A7"
-       },
-       "/",
-       {
-        "Fn::GetAtt": [
-         "AppService7F8F0CA1",
-         "Name"
-        ]
-       }
-      ]
-     ]
-    },
-    "RoleARN": {
-     "Fn::Join": [
-      "",
-      [
-       "arn:",
-       {
-        "Ref": "AWS::Partition"
-       },
-       ":iam::958972795537:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
-      ]
-     ]
-    },
-    "ScalableDimension": "ecs:service:DesiredCount",
-    "ServiceNamespace": "ecs"
-   },
-   "DependsOn": [
-    "TaskRoleDefaultPolicy07FC53DE",
-    "TaskRole30FC0FBB"
-   ],
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/Service/TaskCount/Target/Resource"
-   }
-  },
-  "AppServiceTaskCountTargetCpuScaling0BB106EE": {
-   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
-   "Properties": {
-    "PolicyName": "MathPathTutorAppServiceTaskCountTargetCpuScaling1E583140",
-    "PolicyType": "TargetTrackingScaling",
-    "ScalingTargetId": {
-     "Ref": "AppServiceTaskCountTargetD4FF4F2B"
-    },
-    "TargetTrackingScalingPolicyConfiguration": {
-     "PredefinedMetricSpecification": {
-      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
-     },
-     "TargetValue": 70
-    }
-   },
-   "DependsOn": [
-    "TaskRoleDefaultPolicy07FC53DE",
-    "TaskRole30FC0FBB"
-   ],
-   "Metadata": {
-    "aws:cdk:path": "MathPathTutor/AppService/Service/TaskCount/Target/CpuScaling/Resource"
+    "aws:cdk:path": "MathPathTutor/TestInstance/Resource"
    }
   },
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SwU7DMAz9Fu5dgEqIM9sATZoEWndHbmpKtiypYmdomvrvOO02ug1xsv38bD87yVX+8KjubuCbRrpaj6wp1b5g0OtsgeRj0JhJ7mOPOpcE6hgM716Dj002+XT/AzNXByS6wp87uM0IdUCmDTioMXTtJT7Qk9ebJYQa+YlF1dcG3YBwmWmzUJHaT4GhBMKZIwYnGxSxdMgnkdPxFXCktpk0VgtsPBn2YTeWNgJJ04mNxBgS/ei+yHhgXAKtp/hpnGHjXSJcIt4xGIdhgB1qCwxbIwq7lXq30GChtF3biY9pKwMbtV942/E6++6t0bsU9l6bWV+LyrmvT1sd/bQTfTTAotmRemoaqYCkYu6hGss0Wby6EIQWiI22wig7hnH1Vr7A39WhnzeIhzwj13IHztEf5PtXPMkehG0GvzSI7EluI0Lkq5yOlMjd+c6R3iyD/GQpKPq636udAW2boLfITZRjO1+hWtHtNn9Qubq/WZExoyDvYDaoFr39AXkwnr43AwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WMTQrCMBCFz9J9OtqAHkAX4soSDyAxncL0JymTRCmldzetFHH1fr7HkyCPBewz/fa5qdq8oydM96BNKxR6F9mgSOwxoWFQODhPwfF40h4FGpm2aCJTGC/s4iDOtf0vrtYHbdNJIpufBekeJuW6tV61dB2ZcYk/t+1LdjV1OM8r1qx7DMhLuMUwxDAL6yqExu9e8gASiqzxRDlHG6hHUF/9AFO2QeLqAAAA"
    },
    "Metadata": {
     "aws:cdk:path": "MathPathTutor/CDKMetadata/Default"
    }
   }
  },
- "Outputs": {
-  "AppServiceLoadBalancerDNS940F3CBE": {
-   "Value": {
-    "Fn::GetAtt": [
-     "AppServiceLB2EFD717F",
-     "DNSName"
-    ]
-   }
+ "Parameters": {
+  "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter": {
+   "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+   "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64"
   },
-  "AppServiceServiceURLFB5E6390": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Outputs": {
+  "DeploymentMode": {
+   "Description": "Low-cost testing mode: EC2 only, no ALB/ECS/RDS",
+   "Value": "testing"
+  },
+  "TestInstanceUrl": {
+   "Description": "Low-cost test app URL",
    "Value": {
     "Fn::Join": [
      "",
@@ -829,59 +200,23 @@
       "http://",
       {
        "Fn::GetAtt": [
-        "AppServiceLB2EFD717F",
-        "DNSName"
+        "TestInstance44016A9E4705221e70fcd73d",
+        "PublicDnsName"
        ]
       }
      ]
     ]
    }
   },
-  "LoadBalancerDNS": {
-   "Description": "Application URL",
+  "TestInstanceId": {
+   "Description": "EC2 instance hosting the test app",
    "Value": {
-    "Fn::GetAtt": [
-     "AppServiceLB2EFD717F",
-     "DNSName"
-    ]
+    "Ref": "TestInstance44016A9E4705221e70fcd73d"
    }
   },
-  "DatabaseEndpoint": {
-   "Description": "RDS endpoint",
-   "Value": {
-    "Fn::GetAtt": [
-     "DatabaseB269D8BB",
-     "Endpoint.Address"
-    ]
-   }
-  },
-  "EcrRepository": {
-   "Description": "ECR repository URI",
-   "Value": {
-    "Fn::Join": [
-     "",
-     [
-      "958972795537.dkr.ecr.us-east-1.",
-      {
-       "Ref": "AWS::URLSuffix"
-      },
-      "/mathpath-tutor"
-     ]
-    ]
-   }
-  },
-  "DbSecretArn": {
-   "Description": "Database credentials secret ARN",
-   "Value": {
-    "Ref": "DbCredentials798065DE"
-   }
-  }
- },
- "Parameters": {
-  "BootstrapVersion": {
-   "Type": "AWS::SSM::Parameter::Value<String>",
-   "Default": "/cdk-bootstrap/hnb659fds/version",
-   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  "ImageTag": {
+   "Description": "Container image tag pulled by the test app host",
+   "Value": "cleanup-20260705212913"
   }
  },
  "Rules": {

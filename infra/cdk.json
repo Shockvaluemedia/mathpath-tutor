@@ -1,6 +1,11 @@
 {
   "app": "npx tsx infra/app.ts",
   "context": {
+    "deploymentMode": "testing",
+    "testInstanceType": "t3.micro",
+    "aiModel": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "aiMaxTokens": "1200",
+    "maxCapacity": 1,
     "@aws-cdk/core:stackRelativeExports": true
   }
 }

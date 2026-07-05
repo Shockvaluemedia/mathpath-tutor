@@ -24,9 +24,6 @@ async function main() {
   console.log(`Base URL: ${BASE_URL}`);
   console.log(`Demo Mode: ${process.env.NEXT_PUBLIC_DEMO_MODE}\n`);
 
-  let token: string;
-  let studentId: string;
-
   // 1. Health check
   console.log("1️⃣  Health check...");
   const health = await api("/api/health");
@@ -38,7 +35,7 @@ async function main() {
     method: "POST",
     body: JSON.stringify({ name: "Test Parent", email: `test-${Date.now()}@flow.dev`, password: "test123456" }),
   });
-  token = signup.token;
+  const token = signup.token;
   console.log(`   User: ${signup.user.name} (${signup.user.role})\n`);
 
   // 3. Add student
@@ -54,7 +51,7 @@ async function main() {
       learningPreferences: { style: "visual", hardTopics: ["Fractions"] },
     }),
   });
-  studentId = student.student.id;
+  const studentId = student.student.id;
   console.log(`   Student: ${student.student.name} (Grade ${student.student.grade}, ${student.student.gradeBand})\n`);
 
   // 4. Generate diagnostic

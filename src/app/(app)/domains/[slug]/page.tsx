@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/components/providers/auth-provider";
 import { getDomain } from "@/lib/domains";
 import { READING_PROGRESS } from "@/lib/demo-domains/reading";
 import { AI_LITERACY_PROGRESS } from "@/lib/demo-domains/ai-literacy";
-import { BookOpen, Brain, TrendingUp, Target, ArrowRight, Play } from "lucide-react";
+import { Brain, TrendingUp, Target, ArrowRight, Play } from "lucide-react";
 
 export default function DomainPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
-  const { currentStudent, apiRequest } = useAuth();
-  const [loading, setLoading] = useState(false);
 
   const domain = getDomain(slug);
 
@@ -35,8 +30,7 @@ export default function DomainPage() {
     : slug === "ai-literacy" ? AI_LITERACY_PROGRESS
     : null;
 
-  const startLesson = async () => {
-    setLoading(true);
+  const startLesson = () => {
     // Store active domain
     localStorage.setItem("mathpath_domain", slug);
 
@@ -45,7 +39,6 @@ export default function DomainPage() {
     } else {
       router.push(`/domains/${slug}/learn`);
     }
-    setLoading(false);
   };
 
   return (

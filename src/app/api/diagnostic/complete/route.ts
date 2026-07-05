@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       };
 
       skillProfile = await generateSkillProfile(studentProfile, assessmentData);
-    } catch (aiError) {
+    } catch {
       // Fallback if AI fails
       skillProfile = {
         estimatedLevel: `Grade ${learner.grade}`,

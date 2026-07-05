@@ -22,6 +22,10 @@ interface Question {
   options?: string[];
 }
 
+function getNow() {
+  return Date.now();
+}
+
 export default function DiagnosticPage() {
   const router = useRouter();
   const { currentStudent, apiRequest } = useAuth();
@@ -35,7 +39,7 @@ export default function DiagnosticPage() {
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [responses, setResponses] = useState<Array<{ skillId: string; isCorrect: boolean; difficulty: number }>>([]);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     if (!currentStudent) {
@@ -46,7 +50,7 @@ export default function DiagnosticPage() {
   }, []);
 
   useEffect(() => {
-    startTimeRef.current = Date.now();
+    startTimeRef.current = getNow();
   }, [currentIndex]);
 
   const loadQuestions = async () => {
@@ -77,7 +81,7 @@ export default function DiagnosticPage() {
     if (!answer.trim()) return;
     setSubmitting(true);
 
-    const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+    const timeSpent = Math.round((getNow() - startTimeRef.current) / 1000);
     const currentQ = questions[currentIndex];
 
     try {

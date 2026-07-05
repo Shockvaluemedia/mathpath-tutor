@@ -10,6 +10,8 @@ interface Particle {
   size: number;
   rotation: number;
   delay: number;
+  duration: number;
+  rounded: boolean;
 }
 
 const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#3b82f6"];
@@ -29,6 +31,8 @@ export function Confetti({ active, duration = 3000 }: { active: boolean; duratio
       size: 6 + Math.random() * 8,
       rotation: Math.random() * 360,
       delay: Math.random() * 500,
+      duration: 1500 + Math.random() * 1000,
+      rounded: Math.random() > 0.5,
     }));
 
     setParticles(newParticles);
@@ -56,10 +60,10 @@ export function Confetti({ active, duration = 3000 }: { active: boolean; duratio
             width: p.size,
             height: p.size,
             backgroundColor: p.color,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+            borderRadius: p.rounded ? "50%" : "2px",
             transform: `rotate(${p.rotation}deg)`,
             animationDelay: `${p.delay}ms`,
-            animationDuration: `${1500 + Math.random() * 1000}ms`,
+            animationDuration: `${p.duration}ms`,
           }}
         />
       ))}

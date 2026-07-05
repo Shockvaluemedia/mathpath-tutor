@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/components/providers/auth-provider";
 import { CardSkeleton } from "@/components/ui/skeleton";
-import { Users, AlertTriangle, TrendingUp, Clock, Heart, BookOpen, ArrowRight } from "lucide-react";
+import { Users, AlertTriangle, TrendingUp, Heart, BookOpen, ArrowRight } from "lucide-react";
 
 export default function MentorDashboardPage() {
   const router = useRouter();

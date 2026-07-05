@@ -5,6 +5,7 @@ export type AIProvider = "openai" | "bedrock";
 export const AI_PROVIDER: AIProvider = (process.env.AI_PROVIDER as AIProvider) || "openai";
 export const AI_MODEL = process.env.AI_MODEL || (AI_PROVIDER === "bedrock" ? "us.anthropic.claude-sonnet-4-20250514" : "gpt-4o");
 export const AWS_REGION = process.env.AWS_REGION || "us-east-1";
+export const AI_MAX_TOKENS = Number.parseInt(process.env.AI_MAX_TOKENS || "1200", 10);
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -15,6 +16,7 @@ export interface ChatOptions {
   messages: ChatMessage[];
   temperature?: number;
   jsonMode?: boolean;
+  maxTokens?: number;
 }
 
 /**
@@ -35,6 +37,7 @@ async function openaiCompletion(options: ChatOptions): Promise<string> {
     model: AI_MODEL,
     messages: options.messages,
     temperature: options.temperature ?? 0.7,
+    max_tokens: options.maxTokens ?? AI_MAX_TOKENS,
     ...(options.jsonMode ? { response_format: { type: "json_object" } } : {}),
   });
 
@@ -67,7 +70,7 @@ async function bedrockCompletion(options: ChatOptions): Promise<string> {
 
   const body = JSON.stringify({
     anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 4096,
+    max_tokens: options.maxTokens ?? AI_MAX_TOKENS,
     temperature: options.temperature ?? 0.7,
     system: systemMessage + (options.jsonMode ? "\n\nIMPORTANT: Respond with valid JSON only. No markdown, no explanation outside the JSON." : ""),
     messages: conversationMessages,

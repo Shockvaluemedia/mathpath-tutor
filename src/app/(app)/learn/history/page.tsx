@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -15,6 +15,8 @@ export default function LessonHistoryPage() {
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [todayString] = useState(() => new Date().toDateString());
+  const [yesterdayString] = useState(() => new Date(Date.now() - 86400000).toDateString());
 
   useEffect(() => {
     loadHistory();
@@ -90,10 +92,11 @@ export default function LessonHistoryPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {lessons.map((lesson, i) => {
+          {lessons.map((lesson) => {
             const date = new Date(lesson.date);
-            const isToday = new Date().toDateString() === date.toDateString();
-            const isYesterday = new Date(Date.now() - 86400000).toDateString() === date.toDateString();
+            const lessonDateString = date.toDateString();
+            const isToday = todayString === lessonDateString;
+            const isYesterday = yesterdayString === lessonDateString;
             const dateLabel = isToday ? "Today" : isYesterday ? "Yesterday" : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
             return (

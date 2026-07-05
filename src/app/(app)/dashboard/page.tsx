@@ -12,7 +12,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { StudentStatusCard } from "@/components/dashboard/student-status-card";
 import {
-  TrendingUp, TrendingDown, Minus, Clock, BookOpen, Brain, Target,
+  TrendingUp, TrendingDown, Minus, Clock, BookOpen, Target,
   Plus, BarChart3, Heart, RefreshCw
 } from "lucide-react";
 

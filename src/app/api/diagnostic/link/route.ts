@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
-import { prisma } from "@/lib/db";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
 import crypto from "crypto";
 
 // Generate a unique, short-lived diagnostic link for a student

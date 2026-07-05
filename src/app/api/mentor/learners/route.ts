@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS, DEMO_PROGRESS } from "@/lib/demo-data";
-import { READING_PROGRESS } from "@/lib/demo-domains/reading";
 
 // Returns learners assigned to the current mentor/teacher
 
