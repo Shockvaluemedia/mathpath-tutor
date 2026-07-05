@@ -28,7 +28,7 @@ function getNow() {
 
 export default function DiagnosticPage() {
   const router = useRouter();
-  const { currentStudent, apiRequest } = useAuth();
+  const { currentStudent, apiRequest, isLoading } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
@@ -42,25 +42,26 @@ export default function DiagnosticPage() {
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    if (isLoading) return;
     if (!currentStudent) {
       router.push("/onboarding");
       return;
     }
     loadQuestions();
-  }, []);
+  }, [isLoading, currentStudent]);
 
   useEffect(() => {
     startTimeRef.current = getNow();
   }, [currentIndex]);
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (previousResponses = responses) => {
     setLoading(true);
     try {
       const data = await apiRequest("/api/diagnostic/generate", {
         method: "POST",
         body: JSON.stringify({
           studentId: currentStudent?.id,
-          previousResponses: responses.length > 0 ? responses : undefined,
+          previousResponses: previousResponses.length > 0 ? previousResponses : undefined,
         }),
       });
 
@@ -117,8 +118,8 @@ export default function DiagnosticPage() {
         setAnswer("");
         setHintsShown(0);
         setConfidence(5);
-      } else if (newResponses.length < 15) {
-        await loadQuestions();
+      } else if (newResponses.length < targetQuestionCount) {
+        await loadQuestions(newResponses);
       } else {
         await completeAssessment();
       }
@@ -173,7 +174,11 @@ export default function DiagnosticPage() {
   const currentQuestion = questions[currentIndex];
   if (!currentQuestion) return null;
 
-  const totalProgress = ((responses.length + currentIndex) / 15) * 100;
+  const isDemoAssessment = assessmentId?.startsWith("demo-assessment-") ?? false;
+  const targetQuestionCount = isDemoAssessment ? questions.length : 15;
+  const questionNumber = Math.min(responses.length + 1, targetQuestionCount);
+  const totalProgress = (responses.length / targetQuestionCount) * 100;
+  const totalQuestionLabel = isDemoAssessment ? targetQuestionCount : "~15";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white py-8 px-4">
@@ -182,7 +187,7 @@ export default function DiagnosticPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">
-              Question {responses.length + currentIndex + 1} of ~15
+              Question {questionNumber} of {totalQuestionLabel}
             </span>
             <Badge variant="outline">{currentQuestion.skillName}</Badge>
           </div>

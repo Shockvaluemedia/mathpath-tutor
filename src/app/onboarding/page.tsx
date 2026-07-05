@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
-import { BookOpen, Brain, Clock, Users } from "lucide-react";
+import { BookOpen, Brain, Users } from "lucide-react";
 
 const LEARNING_STYLES = [
   { id: "visual", label: "Visual", description: "Pictures, diagrams, colors" },
@@ -347,7 +347,7 @@ export default function OnboardingPage() {
 
               <div className="pt-2">
                 <p className="text-xs text-gray-400 text-center">
-                  The diagnostic takes 10-15 minutes. {form.name} should answer the questions themselves — it&apos;s how we find their starting point.
+                  The diagnostic takes 10-15 minutes. {form.name}{" "}should answer the questions themselves — it&apos;s how we find their starting point.
                 </p>
               </div>
             </CardContent>
@@ -410,7 +410,20 @@ function SendLinkButton({ studentId, apiRequest }: { studentId: string; apiReque
 
   const copyLink = () => {
     if (link) {
-      navigator.clipboard.writeText(link);
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(link);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = link;
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+      } catch {}
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
