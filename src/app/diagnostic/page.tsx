@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Clock, Lightbulb, ChevronRight } from "lucide-react";
+import { trackSprintEvent } from "@/lib/sprint-tracking";
 
 interface Question {
   id: string;
@@ -40,6 +41,7 @@ export default function DiagnosticPage() {
   const [completed, setCompleted] = useState(false);
   const [responses, setResponses] = useState<Array<{ skillId: string; isCorrect: boolean; difficulty: number }>>([]);
   const startTimeRef = useRef<number>(0);
+  const diagnosticStartedRef = useRef(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -67,6 +69,10 @@ export default function DiagnosticPage() {
 
       setQuestions(data.questions);
       if (data.assessmentId) setAssessmentId(data.assessmentId);
+      if (!diagnosticStartedRef.current) {
+        trackSprintEvent("diagnostic_started", currentStudent?.id);
+        diagnosticStartedRef.current = true;
+      }
       setCurrentIndex(0);
       setAnswer("");
       setHintsShown(0);
@@ -136,11 +142,13 @@ export default function DiagnosticPage() {
         method: "POST",
         body: JSON.stringify({ assessmentId, studentId: currentStudent?.id }),
       });
+      trackSprintEvent("diagnostic_completed", currentStudent?.id);
       setCompleted(true);
       setTimeout(() => router.push("/skill-profile"), 2000);
     } catch (err) {
       console.error("Complete error:", err);
       // Still navigate even if profile generation fails
+      trackSprintEvent("diagnostic_completed", currentStudent?.id);
       setCompleted(true);
       setTimeout(() => router.push("/skill-profile"), 2000);
     }

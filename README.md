@@ -148,6 +148,20 @@ Run `npx prisma studio` to explore the schema visually.
 7. Student works with AI tutor → `/tutor`
 8. Parent sees dashboard and weekly summary → `/dashboard`
 
+## Market Impact MVP: Math Recovery Sprint
+
+The pilot-ready MVP path is the **2-Week Math Recovery Sprint**:
+
+1. Public sprint entry point → `/sprint`
+2. Parent/student completes the diagnostic → `/diagnostic`
+3. Student starts the first daily lesson → `/learn`
+4. Tutor supports stuck moments → `/tutor`
+5. Parent reviews the proof report → `/sprint/report`
+
+The sprint report tracks the key pilot activation signals locally during testing:
+diagnostic started, diagnostic completed, first lesson started, lesson completed, and sprint report viewed.
+The report API is available at `/api/sprint/report?studentId=...` and returns demo data when `NEXT_PUBLIC_DEMO_MODE=true`.
+
 ## Tutor Behavior
 
 The AI tutor follows strict pedagogical rules:

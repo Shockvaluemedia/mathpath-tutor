@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { StudentSwitcher } from "@/components/layout/student-switcher";
 import { XPBar } from "@/components/layout/xp-bar";
-import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, Trophy, RotateCcw, CreditCard, BarChart3, Compass, Building2, AlertTriangle } from "lucide-react";
+import { BookOpen, LayoutDashboard, MessageCircle, LogOut, Menu, X, Users, Brain, Trophy, RotateCcw, CreditCard, BarChart3, Compass, Building2, AlertTriangle, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -19,6 +19,7 @@ export function Navbar() {
   const navItems = user.role === "PARENT"
     ? [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/sprint/report", label: "Sprint", icon: Rocket },
         { href: "/students", label: "Students", icon: Users },
         { href: "/org", label: "Organization", icon: Building2 },
         { href: "/billing/plans", label: "Plans", icon: CreditCard },
@@ -38,6 +39,7 @@ export function Navbar() {
     : [
         { href: "/domains", label: "Domains", icon: Compass },
         { href: "/learn", label: "Learn", icon: BookOpen },
+        { href: "/sprint/report", label: "Sprint", icon: Rocket },
         { href: "/review", label: "Review", icon: RotateCcw },
         { href: "/tutor", label: "Tutor", icon: MessageCircle },
         { href: "/achievements", label: "Achievements", icon: Trophy },

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { StudentStatusCard } from "@/components/dashboard/student-status-card";
 import {
   TrendingUp, TrendingDown, Minus, Clock, BookOpen, Target,
-  Plus, BarChart3, Heart, RefreshCw
+  Plus, BarChart3, Heart, RefreshCw, Rocket
 } from "lucide-react";
 
 interface StudentProgress {
@@ -264,6 +265,8 @@ function StudentDashboard({
         />
       </div>
 
+      <SprintProofCard progress={progress} />
+
       {/* Progress & Skills */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Skill Progress */}
@@ -398,6 +401,42 @@ function StudentDashboard({
         </Card>
       )}
     </div>
+  );
+}
+
+function SprintProofCard({ progress }: { progress?: StudentProgress }) {
+  const stats = progress?.stats;
+  const sessionsCompleted = Math.min(
+    10,
+    Math.max(stats?.lessonsCompletedThisWeek || 0, 0) + Math.max(stats?.tutorSessionsThisWeek || 0, 0)
+  );
+  const sprintProgress = Math.round((sessionsCompleted / 10) * 100);
+  const primaryFocus = progress?.skills?.weak?.[0]?.name || progress?.skills?.developing?.[0]?.name || "First focus skill";
+
+  return (
+    <Card className="border-emerald-200 bg-emerald-50/40">
+      <CardContent className="p-5">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <div className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-emerald-700" />
+              <h3 className="font-semibold text-gray-950">2-Week Math Recovery Sprint</h3>
+            </div>
+            <p className="mt-2 text-sm text-gray-600">
+              {sessionsCompleted}/10 sessions complete. Current recovery focus: {primaryFocus}.
+            </p>
+            <div className="mt-3 max-w-xl">
+              <Progress value={sprintProgress} className="h-2" />
+            </div>
+          </div>
+          <Link href="/sprint/report">
+            <Button className="w-full bg-emerald-700 hover:bg-emerald-800 lg:w-auto">
+              View Sprint Report
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

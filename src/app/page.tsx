@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Brain, TrendingUp, BarChart3, Target, Heart } from "lucide-react";
+import { BookOpen, Brain, TrendingUp, BarChart3, Target, Heart, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -21,6 +21,9 @@ export default function LandingPage() {
             </Link>
             <Link href="/login">
               <Button variant="ghost" size="sm">Log in</Button>
+            </Link>
+            <Link href="/sprint">
+              <Button variant="outline" size="sm">Sprint</Button>
             </Link>
             <Link href="/signup">
               <Button size="sm">Get Started</Button>
@@ -45,6 +48,12 @@ export default function LandingPage() {
           <Link href="/signup">
             <Button size="lg" className="w-full sm:w-auto text-base px-8">
               Start Diagnostic
+            </Button>
+          </Link>
+          <Link href="/sprint">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8">
+              <Rocket className="h-4 w-4 mr-2" />
+              2-Week Sprint
             </Button>
           </Link>
           <Link href="#how-it-works">
