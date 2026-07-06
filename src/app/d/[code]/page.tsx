@@ -12,6 +12,30 @@ export default function DiagnosticLinkPage() {
   const code = params.code as string;
   const [started, setStarted] = useState(false);
 
+  const startDiagnostic = async () => {
+    let seededDemoStudent = false;
+    try {
+      const health = await fetch("/api/health").then((response) => response.json());
+      if (health.demoMode) {
+        localStorage.setItem("mathpath_student", JSON.stringify({
+          id: "demo-student-1",
+          name: "Alex",
+          grade: 5,
+          gradeBand: "ELEMENTARY",
+        }));
+        seededDemoStudent = true;
+      }
+    } catch {}
+
+    setStarted(true);
+    if (seededDemoStudent) {
+      window.location.assign(`/diagnostic?code=${code}`);
+      return;
+    }
+
+    router.push(`/diagnostic?code=${code}`);
+  };
+
   // This page is the student-facing entry point from a shared link
   // No login required — the code authenticates them
 
@@ -45,7 +69,7 @@ export default function DiagnosticLinkPage() {
             <Button
               size="lg"
               className="w-full bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => setStarted(true)}
+              onClick={startDiagnostic}
             >
               I&apos;m Ready — Let&apos;s Go!
               <ArrowRight className="h-5 w-5 ml-2" />
@@ -60,9 +84,6 @@ export default function DiagnosticLinkPage() {
     );
   }
 
-  // Once started, redirect to the diagnostic with the code as context
-  // In production this would load the student's profile from the code
-  router.push(`/diagnostic?code=${code}`);
   return null;
 }
 

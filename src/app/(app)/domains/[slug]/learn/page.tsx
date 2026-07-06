@@ -13,13 +13,13 @@ import { Confetti } from "@/components/ui/confetti";
 import { getDomain } from "@/lib/domains";
 import { READING_DEMO_LESSON } from "@/lib/demo-domains/reading";
 import { AI_LITERACY_DEMO_LESSON } from "@/lib/demo-domains/ai-literacy";
-import { BookOpen, CheckCircle, PartyPopper, MessageCircle, ArrowLeft } from "lucide-react";
+import { CheckCircle, PartyPopper, ArrowLeft } from "lucide-react";
 
 export default function DomainLearnPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
-  const { currentStudent, apiRequest } = useAuth();
+  const { currentStudent } = useAuth();
   const { awardXP } = useXP();
 
   const domain = getDomain(slug);
@@ -29,7 +29,7 @@ export default function DomainLearnPage() {
 
   const [currentSection, setCurrentSection] = useState(0);
   const [completed, setCompleted] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, { answer: string; correct: boolean }[]>>({});
+  const [, setAnswers] = useState<Record<string, { answer: string; correct: boolean }[]>>({});
 
   if (!domain || !lesson) {
     return (
@@ -128,7 +128,6 @@ export default function DomainLearnPage() {
                   question={q}
                   index={i}
                   onAnswer={(ans) => recordAnswer(current.key, i, ans, q.answer)}
-                  domainColor={domain.color}
                 />
               ))}
             </div>
@@ -160,11 +159,10 @@ export default function DomainLearnPage() {
   );
 }
 
-function QuestionBlock({ question, index, onAnswer, domainColor }: {
+function QuestionBlock({ question, index, onAnswer }: {
   question: { question: string; hints: string[]; answer: string; explanation: string };
   index: number;
   onAnswer: (answer: string) => void;
-  domainColor: string;
 }) {
   const [answer, setAnswer] = useState("");
   const [checked, setChecked] = useState(false);

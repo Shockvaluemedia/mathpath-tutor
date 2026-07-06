@@ -10,6 +10,7 @@ const protectedRoutes = [
   "/onboarding",
   "/diagnostic",
   "/skill-profile",
+  "/sprint/report",
   "/admin",
 ];
 
@@ -54,6 +55,7 @@ export const config = {
     "/onboarding/:path*",
     "/diagnostic/:path*",
     "/skill-profile/:path*",
+    "/sprint/report/:path*",
     "/admin/:path*",
     "/login",
     "/signup",

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +12,8 @@ import { useToast } from "@/components/ui/toast";
 import { Building2, Users, Plus, UserPlus, Mail, Shield } from "lucide-react";
 
 export default function OrgPage() {
-  const { apiRequest, user } = useAuth();
+  const { apiRequest } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   const [orgs, setOrgs] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<any>(null);

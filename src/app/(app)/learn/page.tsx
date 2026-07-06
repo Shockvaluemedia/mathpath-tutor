@@ -11,6 +11,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useXP } from "@/components/ui/xp-notification";
 import { Confetti } from "@/components/ui/confetti";
 import { BookOpen, Brain, Dumbbell, Rocket, MessageCircle, Sparkles, CheckCircle, PartyPopper, History } from "lucide-react";
+import { trackSprintEvent } from "@/lib/sprint-tracking";
 
 interface LessonSection {
   title: string;
@@ -64,12 +65,14 @@ export default function LearnPage() {
       setLessonId(data.lessonId);
       setGenerated(true);
       setCurrentSection(0);
+      trackSprintEvent("first_lesson_started", currentStudent?.id);
     } catch (err) {
       console.error("Generate lesson error:", err);
       // Use demo lesson for display
       setLesson(getDemoLesson());
       setLessonId("demo");
       setGenerated(true);
+      trackSprintEvent("first_lesson_started", currentStudent?.id);
     } finally {
       setLoading(false);
     }
@@ -78,6 +81,7 @@ export default function LearnPage() {
   const completeLesson = async () => {
     if (!lessonId || lessonId === "demo") {
       awardXP(50, "Lesson complete!");
+      trackSprintEvent("lesson_completed", currentStudent?.id);
       setCompleted(true);
       return;
     }
@@ -100,9 +104,11 @@ export default function LearnPage() {
         awardXP(25, "Perfect lesson!");
       }
 
+      trackSprintEvent("lesson_completed", currentStudent?.id);
       setCompleted(true);
     } catch (err) {
       console.error("Complete lesson error:", err);
+      trackSprintEvent("lesson_completed", currentStudent?.id);
       setCompleted(true);
     }
   };

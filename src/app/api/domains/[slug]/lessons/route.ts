@@ -10,8 +10,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const body = await request.json();
-    const { studentId } = body;
+    await request.json().catch(() => ({}));
 
     const domain = getDomain(slug);
     if (!domain) {

@@ -10,7 +10,6 @@ export function XPBar() {
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [progress, setProgress] = useState(0);
-  const [levelName, setLevelName] = useState("");
 
   useEffect(() => {
     if (currentStudent && user?.role === "PARENT") return; // Don't show for parents
@@ -23,7 +22,6 @@ export function XPBar() {
       setXp(data.xp);
       setLevel(data.level);
       setProgress(data.xpProgress);
-      setLevelName(data.levelName);
     } catch {
       // Ignore
     }

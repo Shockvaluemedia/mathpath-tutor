@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import {
   CheckCircle, Clock, AlertCircle, Send, Copy, RefreshCw,
-  Brain, BookOpen, MessageCircle, Link2
+  BookOpen, Link2
 } from "lucide-react";
 
 interface StudentStatusProps {
@@ -24,7 +24,7 @@ interface StudentStatusProps {
   onRefresh?: () => void;
 }
 
-export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, lessonsCompleted, onRefresh }: StudentStatusProps) {
+export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, lessonsCompleted }: StudentStatusProps) {
   const { apiRequest } = useAuth();
   const { toast } = useToast();
   const [link, setLink] = useState<string | null>(null);
@@ -49,11 +49,38 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
   };
 
   const copyLink = () => {
-    if (link) {
-      navigator.clipboard.writeText(link);
+    if (!link) return;
+    try {
+      // Try modern clipboard API first (requires HTTPS)
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(link).then(() => {
+          setCopied(true);
+          toast("success", "Link copied! Send it to " + student.name);
+          setTimeout(() => setCopied(false), 3000);
+        });
+        return;
+      }
+    } catch {}
+
+    // Fallback: textarea select + execCommand (works on HTTP)
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = link;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, link.length);
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
       setCopied(true);
       toast("success", "Link copied! Send it to " + student.name);
       setTimeout(() => setCopied(false), 3000);
+    } catch {
+      // Last resort: prompt user to copy manually
+      window.prompt("Copy this link:", link);
     }
   };
 
@@ -142,15 +169,15 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
                 variant="outline"
                 className="flex-1 text-xs"
                 onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: `${student.name}'s Math Diagnostic`, url: link });
+                  if (typeof navigator !== "undefined" && navigator.share && window.isSecureContext) {
+                    navigator.share({ title: `${student.name}'s Math Diagnostic`, url: link! }).catch(() => copyLink());
                   } else {
                     copyLink();
                   }
                 }}
               >
                 <Send className="h-3 w-3 mr-1" />
-                Share via Text/Email
+                Share / Copy
               </Button>
               <Button
                 size="sm"

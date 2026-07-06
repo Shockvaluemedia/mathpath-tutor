@@ -28,20 +28,11 @@
         { "name": "NODE_ENV", "value": "production" },
         { "name": "PORT", "value": "3000" },
         { "name": "AI_PROVIDER", "value": "bedrock" },
-        { "name": "AI_MODEL", "value": "us.anthropic.claude-sonnet-4-20250514" },
+        { "name": "AI_MODEL", "value": "us.anthropic.claude-haiku-4-5-20251001-v1:0" },
+        { "name": "AI_MAX_TOKENS", "value": "1200" },
         { "name": "AWS_REGION", "value": "us-east-1" },
-        { "name": "NEXT_PUBLIC_DEMO_MODE", "value": "false" },
+        { "name": "NEXT_PUBLIC_DEMO_MODE", "value": "true" },
         { "name": "NEXT_PUBLIC_APP_URL", "value": "https://mathpath.yourdomain.com" }
-      ],
-      "secrets": [
-        {
-          "name": "DATABASE_URL",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mathpath/database-url"
-        },
-        {
-          "name": "JWT_SECRET",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mathpath/jwt-secret"
-        }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",

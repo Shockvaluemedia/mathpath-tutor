@@ -9,60 +9,75 @@
       ]
     }
   ],
-  "/MathPathTutor/LoadBalancerDNS": [
+  "/MathPathTutor/SsmParameterValue:--aws--service--ami-amazon-linux-latest--al2023-ami-kernel-6.1-x86_64:C96584B6-F00A-464E-AD19-53AFF4B05118.Parameter": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "LoadBalancerDNS"
+      "data": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61x8664C96584B6F00A464EAD1953AFF4B05118Parameter"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:160:5)",
+        "...new Instance2 in aws-cdk-lib...",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:81:28)",
+        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
+        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)"
+      ]
+    }
+  ],
+  "/MathPathTutor/DeploymentMode": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DeploymentMode"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:92:7)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/DatabaseEndpoint": [
+  "/MathPathTutor/TestInstanceUrl": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "DatabaseEndpoint"
+      "data": "TestInstanceUrl"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:165:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:97:7)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/EcrRepository": [
+  "/MathPathTutor/TestInstanceId": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "EcrRepository"
+      "data": "TestInstanceId"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:170:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:102:7)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/DbSecretArn": [
+  "/MathPathTutor/ImageTag": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "DbSecretArn"
+      "data": "ImageTag"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:175:5)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:107:7)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
@@ -95,251 +110,67 @@
       ]
     }
   ],
-  "/MathPathTutor/DbSg/Resource": [
+  "/MathPathTutor/TestInstanceSg/Resource": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "DbSg495F8305"
+      "data": "TestInstanceSg90BDF2EC"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
         "...new SecurityGroup2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:20:18)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:35:22)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/DbSg/from MathPathTutorAppSg76FC290D:5432": [
+  "/MathPathTutor/TestInstanceRole/Resource": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "DbSgfromMathPathTutorAppSg76FC290D5432E737806A"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...WrappedClass.<anonymous> in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:32:10)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/DbSg/from MathPathTutorAppServiceSecurityGroupCA9ADDB7:5432": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "DbSgfromMathPathTutorAppServiceSecurityGroupCA9ADDB754327B13BF8A"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...Connections.allowFrom in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:157:26)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppSg/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppSg898BCA4E"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new SecurityGroup2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:26:19)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/DbCredentials/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "DbCredentials798065DE"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new Secret2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:35:27)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/Database/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "DatabaseB269D8BB"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new DatabaseInstance2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:45:22)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/JwtSecret/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "JwtSecretB8834B39"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new Secret2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:64:23)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/Cluster/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "ClusterEB0386A7"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new Cluster2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:76:21)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/TaskRole/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "TaskRole30FC0FBB"
+      "data": "TestInstanceRole5518C8D3"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
         "...new Role2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:82:22)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:42:24)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/AppLogs/Resource": [
+  "/MathPathTutor/TestInstance/InstanceProfile": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "AppLogsC5DF83A6"
+      "data": "TestInstanceInstanceProfileD0E25910"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new LogGroup2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:126:21)",
+        "...new Instance2 in aws-cdk-lib...",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:81:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
       ]
     }
   ],
-  "/MathPathTutor/AppService/LoadBalancerDNS": [
+  "/MathPathTutor/TestInstance/Resource": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "AppServiceLoadBalancerDNS940F3CBE"
+      "data": "TestInstance44016A9E4705221e70fcd73d"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
+        "...new Instance2 in aws-cdk-lib...",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:81:28)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
         "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/ServiceURL": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceServiceURLFB5E6390"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service": [
-    {
-      "type": "aws:cdk:warning",
-      "data": "Enable the 'circuitBreaker' property to trigger a quicker deployment failure if tasks are failing to come start (without this setting deployments may take up to 3 hours to fail). [ack: @aws-cdk/aws-ecs:shouldUseCircuitBreaker]",
-      "trace": [
-        "Annotations.addMessage (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2399)",
-        "Annotations.addWarningV2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1087)",
-        "new BaseService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:13563)",
-        "new BaseService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
-        "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6805)",
-        "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs-patterns/lib/fargate/application-load-balanced-fargate-service.js:1:6392)",
-        "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "Object.<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "Module._compile (node:internal/modules/cjs/loader:1760:14)",
-        "Object.transformer (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/tsx/dist/register-BOkp8V6j.cjs:9:3176)",
-        "Module.load (node:internal/modules/cjs/loader:1480:32)",
-        "Module._load (node:internal/modules/cjs/loader:1299:12)",
-        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
-        "loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)",
-        "ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)",
-        "ModuleJob.run (node:internal/modules/esm/module_job:413:25)",
-        "async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:654:26)",
-        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)"
-      ]
-    },
-    {
-      "type": "aws:cdk:warning",
-      "data": "minHealthyPercent has not been configured so the default value of 50% is used. The number of running tasks will decrease below the desired count during deployments etc. See https://github.com/aws/aws-cdk/issues/31705 [ack: @aws-cdk/aws-ecs:minHealthyPercent]",
-      "trace": [
-        "Annotations.addMessage (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/annotations.js:1:2399)",
-        "Annotations.addWarningV2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/annotations.js:1:1087)",
-        "new BaseService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs/lib/base/base-service.js:1:14478)",
-        "new BaseService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/no-box-stack-traces.js:1:345)",
-        "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs/lib/fargate/fargate-service.js:1:6805)",
-        "new FargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/aws-ecs-patterns/lib/fargate/application-load-balanced-fargate-service.js:1:6392)",
-        "new ApplicationLoadBalancedFargateService2 (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/aws-cdk-lib/core/lib/prop-injectable.js:1:855)",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "Object.<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "Module._compile (node:internal/modules/cjs/loader:1760:14)",
-        "Object.transformer (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/node_modules/tsx/dist/register-BOkp8V6j.cjs:9:3176)",
-        "Module.load (node:internal/modules/cjs/loader:1480:32)",
-        "Module._load (node:internal/modules/cjs/loader:1299:12)",
-        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
-        "wrapModuleLoad (node:internal/modules/cjs/loader:245:24)",
-        "loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:339:3)",
-        "ModuleWrap.<anonymous> (node:internal/modules/esm/translators:242:7)",
-        "ModuleJob.run (node:internal/modules/esm/module_job:413:25)",
-        "async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:654:26)",
-        "async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)"
       ]
     }
   ],
@@ -356,236 +187,18 @@
       ]
     }
   ],
-  "/MathPathTutor/DbCredentials/Attachment/Resource": [
+  "/MathPathTutor/TestInstanceRole/DefaultPolicy/Resource": [
     {
       "type": "aws:cdk:logicalId",
-      "data": "DbCredentialsAttachmentD2151D4F"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new DatabaseInstance2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:45:22)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
-      ]
-    }
-  ],
-  "/MathPathTutor/Database/SubnetGroup/Default": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "DatabaseSubnetGroup7D60F180"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new DatabaseInstance2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:45:22)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals..."
-      ]
-    }
-  ],
-  "/MathPathTutor/TaskRole/DefaultPolicy/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "TaskRoleDefaultPolicy07FC53DE"
+      "data": "TestInstanceRoleDefaultPolicyC7EABD87"
     },
     {
       "type": "aws:cdk:creationStack",
       "data": [
         "...WrappedClass.<anonymous> in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:87:14)",
+        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:47:16)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
         "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/LB/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceLB2EFD717F"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/TaskDef/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceTaskDefD07EA99B"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service/Service": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppService7F8F0CA1"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/LB/SecurityGroup/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceLBSecurityGroupB5DEF339"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/LB/SecurityGroup/to MathPathTutorAppServiceSecurityGroupCA9ADDB7:3000": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceLBSecurityGrouptoMathPathTutorAppServiceSecurityGroupCA9ADDB730002FF89FE3"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...aws-cdk-lib...",
-        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/LB/PublicListener/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceLBPublicListenerB6FF7149"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...aws-cdk-lib...",
-        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/TaskDef/ExecutionRole/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceTaskDefExecutionRoleD1C756A8"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...aws-cdk-lib...",
-        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service/SecurityGroup/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceSecurityGroup8261DDA4"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service/SecurityGroup/from MathPathTutorAppServiceLBSecurityGroup39E18A09:3000": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceSecurityGroupfromMathPathTutorAppServiceLBSecurityGroup39E18A09300083802CBF"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...aws-cdk-lib...",
-        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/LB/PublicListener/ECSGroup/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceLBPublicListenerECSGroup41DB273F"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...new ApplicationLoadBalancedFargateService2 in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:98:28)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/TaskDef/ExecutionRole/DefaultPolicy/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceTaskDefExecutionRoleDefaultPolicy1C514EB9"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...aws-cdk-lib...",
-        "(no user code in 10 frames, use --stack-trace-limit to capture more)"
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service/TaskCount/Target/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceTaskCountTargetD4FF4F2B"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...WrappedClass.autoScaleTaskCount in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:148:44)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals..."
-      ]
-    }
-  ],
-  "/MathPathTutor/AppService/Service/TaskCount/Target/CpuScaling/Resource": [
-    {
-      "type": "aws:cdk:logicalId",
-      "data": "AppServiceTaskCountTargetCpuScaling0BB106EE"
-    },
-    {
-      "type": "aws:cdk:creationStack",
-      "data": [
-        "...ScalableTaskCount.scaleOnCpuUtilization in aws-cdk-lib...",
-        "new MathPathStack (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/stack.ts:152:13)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:6:1)",
-        "<anonymous> (/Users/wearelightinc/Math Path Tutor/mathpath-tutor/infra/app.ts:11:2)",
-        "...node internals, tsx..."
       ]
     }
   ]

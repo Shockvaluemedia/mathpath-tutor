@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     let emailContent;
-    let recipientEmail = data?.email;
+    const recipientEmail = data?.email;
 
     switch (type) {
       case "weekly_report":

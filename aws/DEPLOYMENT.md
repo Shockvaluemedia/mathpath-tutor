@@ -2,6 +2,58 @@
 
 ## Architecture
 
+### Low-Cost Testing Architecture
+
+The default CDK deployment mode is now optimized for testing:
+
+```
+EC2 t3.micro
+    └── Docker container running MathPath Tutor
+        └── Demo mode enabled
+```
+
+This mode intentionally does **not** create ECS, an Application Load Balancer, or RDS. It is meant for early click-through testing where you want a public AWS URL without paying for always-on production infrastructure.
+
+Deploy the testing stack:
+
+```bash
+npx cdk deploy --app "npx tsx infra/app.ts"
+```
+
+Important: if the same `MathPathTutor` stack was previously deployed in production-style mode, deploying testing mode will remove the production-style resources from that stack, including ECS, the load balancer, and RDS. Export or snapshot any database data you care about before switching modes.
+
+Useful testing-mode overrides:
+
+```bash
+npx cdk deploy --app "npx tsx infra/app.ts" \
+  -c deploymentMode=testing \
+  -c testInstanceType=t3.micro \
+  -c aiModel=us.anthropic.claude-haiku-4-5-20251001-v1:0 \
+  -c aiMaxTokens=1200
+```
+
+The testing stack outputs `TestInstanceUrl`. Use that URL for testers.
+
+To stop all testing compute costs when nobody is using it:
+
+```bash
+aws ec2 stop-instances --instance-ids <TEST_INSTANCE_ID>
+```
+
+To remove the test stack entirely:
+
+```bash
+npx cdk destroy --app "npx tsx infra/app.ts"
+```
+
+### Production-Style Architecture
+
+Use this only when you need production-like infrastructure:
+
+```bash
+npx cdk deploy --app "npx tsx infra/app.ts" -c deploymentMode=production
+```
+
 ```
 CloudFront (CDN)
     ↓
@@ -178,11 +230,23 @@ npm run dev
 
 ## Cost Estimate (small scale)
 
+### Low-cost testing mode
+
 | Service | Monthly Cost |
 |---------|-------------|
-| ECS Fargate (2 tasks, 0.5 vCPU) | ~$30 |
+| EC2 t3.micro test host | ~$0-8, depending on free-tier eligibility |
+| EBS storage | ~$1-3 |
+| Bedrock | Usually near $0 in demo mode |
+| ALB/ECS/RDS | $0 |
+| **Total** | **~$1-15/mo** |
+
+### Production-style mode
+
+| Service | Monthly Cost |
+|---------|-------------|
+| ECS Fargate (1 task, 0.5 vCPU) | ~$18-25 |
 | RDS PostgreSQL (db.t3.micro) | ~$15 |
 | Bedrock (Claude, moderate usage) | ~$20-50 |
 | ALB | ~$20 |
 | CloudFront | ~$5 |
-| **Total** | **~$90-120/mo** |
+| **Total** | **~$60-115/mo** |

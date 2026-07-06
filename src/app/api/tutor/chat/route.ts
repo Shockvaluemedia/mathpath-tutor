@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { studentId, sessionId, message, lessonId } = body;
 
-    if (!studentId || !message) {
-      return NextResponse.json({ error: "Student ID and message required" }, { status: 400 });
+    if (!message) {
+      return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
     if (DEMO_MODE) {
@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
+    if (!studentId) {
+      return NextResponse.json({ error: "Student ID required" }, { status: 400 });
+    }
+
     const token = getTokenFromHeader(request.headers.get("authorization"));
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const payload = verifyToken(token);

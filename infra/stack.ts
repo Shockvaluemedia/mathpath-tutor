@@ -13,8 +13,104 @@ export class MathPathStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    const deploymentMode = this.node.tryGetContext("deploymentMode") || process.env.DEPLOYMENT_MODE || "testing";
+    const configuredAppUrl = this.node.tryGetContext("appUrl") || process.env.NEXT_PUBLIC_APP_URL;
+    const appUrl = configuredAppUrl || "http://placeholder.com";
+    const aiModel = this.node.tryGetContext("aiModel") || process.env.AI_MODEL || "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+    const aiMaxTokens = String(this.node.tryGetContext("aiMaxTokens") || process.env.AI_MAX_TOKENS || "1200");
+    const imageTag = this.node.tryGetContext("imageTag") || process.env.IMAGE_TAG || "latest";
+
     // ─── VPC ───────────────────────────────────────────────
     const vpc = ec2.Vpc.fromLookup(this, "DefaultVpc", { isDefault: true });
+
+    // Low-cost testing mode:
+    // - no ALB
+    // - no ECS service
+    // - no RDS
+    // - demo mode enabled
+    // - a single tiny EC2 host runs the latest ECR image
+    if (deploymentMode === "testing") {
+      const repository = ecr.Repository.fromRepositoryName(this, "AppRepo", "mathpath-tutor");
+
+      const testSg = new ec2.SecurityGroup(this, "TestInstanceSg", {
+        vpc,
+        description: "MathPath low-cost test instance security group",
+        allowAllOutbound: true,
+      });
+      testSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), "Allow HTTP for testers");
+
+      const testRole = new iam.Role(this, "TestInstanceRole", {
+        assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      });
+      testRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2ContainerRegistryReadOnly"));
+      testRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"));
+      testRole.addToPolicy(new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+        resources: ["*"],
+      }));
+
+      const userData = ec2.UserData.forLinux();
+      userData.addCommands(
+        "set -eux",
+        "dnf update -y",
+        "dnf install -y docker awscli",
+        "systemctl enable --now docker",
+        "TOKEN=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H 'X-aws-ec2-metadata-token-ttl-seconds: 21600' || true)",
+        "PUBLIC_HOSTNAME=$(curl -fsS -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/public-hostname || true)",
+        configuredAppUrl ? `APP_URL=${configuredAppUrl}` : "APP_URL=http://$PUBLIC_HOSTNAME",
+        `aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${this.account}.dkr.ecr.${this.region}.amazonaws.com`,
+        `docker pull ${repository.repositoryUri}:${imageTag}`,
+        "docker rm -f mathpath-tutor || true",
+        [
+          "docker run -d --restart unless-stopped",
+          "--name mathpath-tutor",
+          "-p 80:3000",
+          "-e NODE_ENV=production",
+          "-e PORT=3000",
+          "-e AI_PROVIDER=bedrock",
+          `-e AI_MODEL=${aiModel}`,
+          `-e AI_MAX_TOKENS=${aiMaxTokens}`,
+          `-e AWS_REGION=${this.region}`,
+          "-e NEXT_PUBLIC_DEMO_MODE=true",
+          "-e NEXT_PUBLIC_APP_URL=$APP_URL",
+          `${repository.repositoryUri}:${imageTag}`,
+        ].join(" ")
+      );
+
+      const instanceType = this.node.tryGetContext("testInstanceType") || "t3.micro";
+      const testInstance = new ec2.Instance(this, "TestInstance", {
+        vpc,
+        vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+        instanceType: new ec2.InstanceType(instanceType),
+        machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+        securityGroup: testSg,
+        role: testRole,
+        userData,
+        userDataCausesReplacement: true,
+      });
+
+      new cdk.CfnOutput(this, "DeploymentMode", {
+        value: "testing",
+        description: "Low-cost testing mode: EC2 only, no ALB/ECS/RDS",
+      });
+
+      new cdk.CfnOutput(this, "TestInstanceUrl", {
+        value: `http://${testInstance.instancePublicDnsName}`,
+        description: "Low-cost test app URL",
+      });
+
+      new cdk.CfnOutput(this, "TestInstanceId", {
+        value: testInstance.instanceId,
+        description: "EC2 instance hosting the test app",
+      });
+
+      new cdk.CfnOutput(this, "ImageTag", {
+        value: imageTag,
+        description: "Container image tag pulled by the test app host",
+      });
+
+      return;
+    }
 
     // ─── Security Groups ───────────────────────────────────
     const dbSg = new ec2.SecurityGroup(this, "DbSg", {
@@ -111,8 +207,9 @@ export class MathPathStack extends cdk.Stack {
           AI_PROVIDER: "bedrock",
           AI_MODEL: "us.anthropic.claude-haiku-4-5-20251001-v1:0",
           AWS_REGION: "us-east-1",
+          AI_MAX_TOKENS: aiMaxTokens,
           NEXT_PUBLIC_DEMO_MODE: "false",
-          NEXT_PUBLIC_APP_URL: "http://placeholder.com", // Update after deploy
+          NEXT_PUBLIC_APP_URL: appUrl,
           DB_HOST: database.instanceEndpoint.hostname,
           DB_PORT: "5432",
           DB_NAME: "mathpath_tutor",
@@ -147,7 +244,7 @@ export class MathPathStack extends cdk.Stack {
     // Auto-scaling
     const scaling = fargateService.service.autoScaleTaskCount({
       minCapacity: 1,
-      maxCapacity: 4,
+      maxCapacity: Number(this.node.tryGetContext("maxCapacity") || 1),
     });
     scaling.scaleOnCpuUtilization("CpuScaling", {
       targetUtilizationPercent: 70,

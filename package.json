@@ -11,7 +11,10 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "deploy:test": "cdk deploy --app \"npx tsx infra/app.ts\" -c deploymentMode=testing",
+    "deploy:prod": "cdk deploy --app \"npx tsx infra/app.ts\" -c deploymentMode=production",
+    "destroy:test": "cdk destroy --app \"npx tsx infra/app.ts\" -c deploymentMode=testing"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -27,7 +30,7 @@
     "date-fns": "^4.3.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.16.0",
-    "next": "16.2.6",
+    "next": "^16.2.10",
     "openai": "^6.39.0",
     "prisma": "^5.22.0",
     "react": "19.2.4",
@@ -48,14 +51,17 @@
     "@types/react-dom": "^19",
     "@types/stripe": "^8.0.416",
     "@types/uuid": "^10.0.0",
-    "aws-cdk": "^2.1125.0",
-    "aws-cdk-lib": "^2.257.0",
+    "aws-cdk": "^2.1129.0",
+    "aws-cdk-lib": "^2.261.0",
     "constructs": "^10.6.0",
     "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
+    "eslint-config-next": "^16.2.10",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "8.5.15"
   }
 }

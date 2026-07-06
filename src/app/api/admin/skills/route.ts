@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
 
 // In-memory store for demo mode
-let demoSkills = [
+const demoSkills = [
   { id: "1", name: "Counting to 20", domain: "Number Sense", gradeMin: 0, gradeMax: 1, prerequisites: [], description: "Count objects and numbers up to 20" },
   { id: "2", name: "Number Recognition", domain: "Number Sense", gradeMin: 0, gradeMax: 1, prerequisites: [], description: "Identify and name numbers 0-20" },
   { id: "3", name: "Addition (single digit)", domain: "Operations", gradeMin: 0, gradeMax: 2, prerequisites: ["1", "2"], description: "Add single-digit numbers" },

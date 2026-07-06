@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
-import { CheckCircle, AlertCircle, TrendingUp, Target, ArrowRight } from "lucide-react";
+import { CheckCircle, AlertCircle, TrendingUp, Target, ArrowRight, Rocket } from "lucide-react";
 
 interface SkillInfo {
   id: string;
@@ -205,10 +205,14 @@ export default function SkillProfilePage() {
         </Card>
 
         {/* CTA */}
-        <div className="text-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Button size="lg" onClick={() => router.push("/learn")}>
             Start First Lesson
             <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => router.push("/sprint/report")}>
+            <Rocket className="h-4 w-4 mr-2" />
+            View Sprint Plan
           </Button>
         </div>
       </div>

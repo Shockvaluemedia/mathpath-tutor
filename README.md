@@ -24,7 +24,7 @@ MathPath Tutor is not a homework answer app or a worksheet generator. It's an ad
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - PostgreSQL database
 - OpenAI API key
 
@@ -148,6 +148,20 @@ Run `npx prisma studio` to explore the schema visually.
 7. Student works with AI tutor → `/tutor`
 8. Parent sees dashboard and weekly summary → `/dashboard`
 
+## Market Impact MVP: Math Recovery Sprint
+
+The pilot-ready MVP path is the **2-Week Math Recovery Sprint**:
+
+1. Public sprint entry point → `/sprint`
+2. Parent/student completes the diagnostic → `/diagnostic`
+3. Student starts the first daily lesson → `/learn`
+4. Tutor supports stuck moments → `/tutor`
+5. Parent reviews the proof report → `/sprint/report`
+
+The sprint report tracks the key pilot activation signals locally during testing:
+diagnostic started, diagnostic completed, first lesson started, lesson completed, and sprint report viewed.
+The report API is available at `/api/sprint/report?studentId=...` and returns demo data when `NEXT_PUBLIC_DEMO_MODE=true`.
+
 ## Tutor Behavior
 
 The AI tutor follows strict pedagogical rules:
@@ -178,11 +192,22 @@ npm run lint         # Run linter
 
 ## Deployment
 
-The app is designed for AWS deployment:
-- Vercel or AWS Amplify for the Next.js frontend
-- AWS RDS for PostgreSQL
-- Environment variables for all secrets
-- Serverless-compatible API routes
+The app has two AWS deployment modes:
+
+| Mode | Command | Infrastructure | Use For |
+|------|---------|----------------|---------|
+| Low-cost testing | `npm run deploy:test` | One small EC2 instance, Docker, demo mode, no ALB/ECS/RDS | Early tester access |
+| Production-style | `npm run deploy:prod` | ECS Fargate, ALB, RDS PostgreSQL, Secrets Manager | Real production traffic |
+
+Testing mode is the default CDK mode and keeps monthly AWS spend low while the app is still being validated. It runs with `NEXT_PUBLIC_DEMO_MODE=true`, uses the cheaper Bedrock Haiku model, and caps AI responses with `AI_MAX_TOKENS`.
+
+To stop testing costs when nobody is using the app:
+
+```bash
+npm run destroy:test
+```
+
+For details, see `aws/DEPLOYMENT.md`.
 
 ## License
 

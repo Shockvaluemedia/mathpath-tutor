@@ -1,5 +1,5 @@
 {
-  "version": "53.0.0",
+  "version": "54.0.0",
   "artifacts": {
     "MathPathTutor.assets": {
       "type": "cdk:asset-manifest",
@@ -18,7 +18,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::958972795537:role/cdk-hnb659fds-deploy-role-958972795537-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::958972795537:role/cdk-hnb659fds-cfn-exec-role-958972795537-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-958972795537-us-east-1/bc42c6b13aab3c59a7f713a746382d0b9995a704480b110921c9926f9e0c4209.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-958972795537-us-east-1/c6c53c3534b6dd7262ef1dc48e8712a5cf245d8ed5d2067c0adaeb3fbb486289.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -477,12 +477,16 @@
             "recommendedValue": true,
             "explanation": "Use AL2023 as the default imageType for EC2 Batch compute environments instead of the deprecated AL2"
           },
+          "@aws-cdk/aws-eks:defaultToAL2023": {
+            "recommendedValue": true,
+            "explanation": "Use AL2023 as the default AMI type for EKS managed node groups using non-GPU instance types instead of the deprecated AL2"
+          },
           "@aws-cdk/core:annotationsInValidationReport": {
             "recommendedValue": true,
             "explanation": "Include construct annotations (warnings and errors) in the policy validation report"
           },
           "@aws-cdk/core:defaultCrossStackReferences": {
-            "recommendedValue": "strong",
+            "recommendedValue": "weak",
             "explanation": "Controls whether cross-region stack references are strong, weak, or both",
             "unconfiguredBehavesLike": {
               "v2": "strong"
@@ -492,5 +496,5 @@
       }
     }
   },
-  "minimumCliVersion": "2.1125.0"
+  "minimumCliVersion": "2.1129.0"
 }
