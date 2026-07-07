@@ -54,6 +54,7 @@ interface ProgressLike {
     lessonsCompletedThisWeek?: number;
     totalLessons?: number;
     timeSpentMinutes?: number;
+    masteredSkillsCount?: number;
     avgConfidence?: number;
     confidenceTrend?: "improving" | "stable" | "declining";
     tutorSessionsThisWeek?: number;

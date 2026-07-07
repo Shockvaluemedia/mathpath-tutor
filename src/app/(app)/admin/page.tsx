@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
 import { CardSkeleton } from "@/components/ui/skeleton";
-import { Users, BookOpen, Brain, MessageCircle, TrendingUp, BarChart3 } from "lucide-react";
+import { Users, BookOpen, Brain, MessageCircle, TrendingUp, BarChart3, Rocket } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
@@ -55,7 +55,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
+      <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <AdminLink
+          href="/admin/pilot"
+          icon={<Rocket className="h-6 w-6 text-emerald-600" />}
+          title="Pilot Control"
+          description="Track sprint families, proof reports, and feedback"
+        />
         <AdminLink
           href="/admin/skills"
           icon={<Brain className="h-6 w-6 text-indigo-600" />}

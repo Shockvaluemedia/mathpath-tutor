@@ -27,6 +27,7 @@ export function Navbar() {
     : user.role === "ADMIN"
     ? [
         { href: "/admin", label: "Overview", icon: LayoutDashboard },
+        { href: "/admin/pilot", label: "Pilot", icon: Rocket },
         { href: "/admin/skills", label: "Skills", icon: Brain },
         { href: "/admin/students", label: "Students", icon: Users },
         { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
