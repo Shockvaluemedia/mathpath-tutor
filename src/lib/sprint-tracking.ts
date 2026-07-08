@@ -4,7 +4,8 @@ export type SprintEventName =
   | "diagnostic_completed"
   | "first_lesson_started"
   | "lesson_completed"
-  | "sprint_report_viewed";
+  | "sprint_report_viewed"
+  | "parent_feedback_submitted";
 
 export interface SprintEvent {
   name: SprintEventName;
@@ -79,6 +80,10 @@ export function getSprintActivationSummary(studentId?: string) {
     {
       label: "Sprint report viewed",
       complete: completed.has("sprint_report_viewed"),
+    },
+    {
+      label: "Parent feedback submitted",
+      complete: completed.has("parent_feedback_submitted"),
     },
   ];
 }

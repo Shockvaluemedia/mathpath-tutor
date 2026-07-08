@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
+import { ParentFeedbackCard } from "@/components/pilot/parent-feedback-card";
 import type { SprintReport } from "@/lib/sprint";
 import { getSprintActivationSummary, trackSprintEvent } from "@/lib/sprint-tracking";
 
@@ -245,6 +246,10 @@ export default function SprintReportPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-6">
+        <ParentFeedbackCard studentId={report.studentId} studentName={report.studentName} />
+      </div>
     </div>
   );
 }

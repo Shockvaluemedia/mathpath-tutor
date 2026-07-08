@@ -162,6 +162,11 @@ The sprint report tracks the key pilot activation signals locally during testing
 diagnostic started, diagnostic completed, first lesson started, lesson completed, and sprint report viewed.
 The report API is available at `/api/sprint/report?studentId=...` and returns demo data when `NEXT_PUBLIC_DEMO_MODE=true`.
 
+The operator pilot control room is available at `/admin/pilot`. It tracks family invite status,
+diagnostic completion, first lesson, three-session activation, report views, parent feedback,
+and exports pilot evidence from `/api/pilot/summary?format=csv`.
+Use `docs/pilot-tester-script.md` for the first 3-5 tester families.
+
 ## Tutor Behavior
 
 The AI tutor follows strict pedagogical rules:
