@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
     return NextResponse.json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, planId: user.planId },
       token,
     });
   } catch (error) {
