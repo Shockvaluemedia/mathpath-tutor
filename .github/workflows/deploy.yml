@@ -51,17 +51,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check AWS deploy configuration
+        id: aws-deploy
+        env:
+          AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+        run: |
+          if [ -z "$AWS_ROLE_ARN" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### AWS deploy skipped"
+              echo ""
+              echo "The app build passed, but AWS_ROLE_ARN is not configured for this repository."
+              echo "Add AWS_ROLE_ARN to repository secrets to enable the ECR/ECS deployment path."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "### AWS deploy enabled"
+            echo ""
+            echo "AWS_ROLE_ARN is configured; continuing with ECR/ECS deployment."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Configure AWS credentials
+        if: steps.aws-deploy.outputs.enabled == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        if: steps.aws-deploy.outputs.enabled == 'true'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to ECR
+        if: steps.aws-deploy.outputs.enabled == 'true'
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -72,9 +98,21 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Deploy to ECS
+        if: steps.aws-deploy.outputs.enabled == 'true'
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: aws/task-definition.json
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Deployment summary
+        if: steps.aws-deploy.outputs.enabled == 'true'
+        run: |
+          {
+            echo "### AWS deploy completed"
+            echo ""
+            echo "- Image: \`${{ steps.build-image.outputs.image }}\`"
+            echo "- Cluster: \`${{ env.ECS_CLUSTER }}\`"
+            echo "- Service: \`${{ env.ECS_SERVICE }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

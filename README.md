@@ -206,6 +206,8 @@ The app has two AWS deployment modes:
 
 Testing mode is the default CDK mode and keeps monthly AWS spend low while the app is still being validated. It runs with `NEXT_PUBLIC_DEMO_MODE=true`, uses the cheaper Bedrock Haiku model, and caps AI responses with `AI_MAX_TOKENS`.
 
+GitHub Actions always runs install, Prisma generation, typecheck, and build for pull requests and `main`. On `main` pushes, the deploy job checks for `AWS_ROLE_ARN` first. If the secret is absent, the workflow records an "AWS deploy skipped" summary and succeeds in build-only/demo mode. Add `AWS_ROLE_ARN` to repository secrets to enable the ECR/ECS deployment path.
+
 To stop testing costs when nobody is using the app:
 
 ```bash
