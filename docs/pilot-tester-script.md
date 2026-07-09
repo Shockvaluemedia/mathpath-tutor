@@ -39,6 +39,8 @@ Would you be open to trying the diagnostic this week and sharing quick feedback 
 - Day 7: three sessions completed
 - Day 14: report viewed and feedback submitted
 
+Use `/admin/pilot` each day as the action queue. Each family has a priority, due window, and ready-to-send message for the next follow-up.
+
 ## Feedback Questions
 
 - Was the report clear?

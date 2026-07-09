@@ -7,6 +7,8 @@ import {
   BarChart3,
   CheckCircle2,
   ClipboardList,
+  Clock3,
+  Copy,
   Download,
   MessageSquare,
   RefreshCw,
@@ -30,10 +32,30 @@ const funnelLabels = [
   { key: "feedbackReceived", label: "Feedback" },
 ] as const;
 
+const actionPriorityRank = {
+  high: 0,
+  medium: 1,
+  low: 2,
+} as const;
+
+function actionHref(stage: PilotParticipant["operatorAction"]["stage"]) {
+  if (stage === "report" || stage === "feedback" || stage === "continuation") {
+    return "/sprint/report";
+  }
+  return "/sprint";
+}
+
+function priorityClass(priority: PilotParticipant["operatorAction"]["priority"]) {
+  if (priority === "high") return "bg-rose-100 text-rose-800 hover:bg-rose-100";
+  if (priority === "medium") return "bg-amber-100 text-amber-800 hover:bg-amber-100";
+  return "bg-slate-100 text-slate-700 hover:bg-slate-100";
+}
+
 export default function AdminPilotPage() {
   const { apiRequest } = useAuth();
   const [summary, setSummary] = useState<PilotSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedActionId, setCopiedActionId] = useState<string | null>(null);
 
   const loadSummary = async () => {
     setLoading(true);
@@ -46,6 +68,21 @@ export default function AdminPilotPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyMessage = async (participantId: string, message: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(message);
+        setCopiedActionId(participantId);
+        window.setTimeout(() => setCopiedActionId(null), 1800);
+        return;
+      }
+    } catch (err) {
+      console.error("Copy pilot action failed:", err);
+    }
+
+    window.prompt("Copy this message:", message);
   };
 
   useEffect(() => {
@@ -81,6 +118,11 @@ export default function AdminPilotPage() {
   const reportProgress = summary.overview.invited > 0
     ? Math.round((summary.overview.reportViewed / summary.overview.invited) * 100)
     : 0;
+  const actionQueue = [...summary.participants].sort((a, b) => {
+    const priorityDelta = actionPriorityRank[a.operatorAction.priority] - actionPriorityRank[b.operatorAction.priority];
+    if (priorityDelta !== 0) return priorityDelta;
+    return new Date(a.invitedAt).getTime() - new Date(b.invitedAt).getTime();
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -114,6 +156,48 @@ export default function AdminPilotPage() {
         <MetricCard icon={<BarChart3 className="h-5 w-5 text-amber-600" />} label="Reports Viewed" value={`${summary.overview.reportViewed}`} />
         <MetricCard icon={<MessageSquare className="h-5 w-5 text-rose-600" />} label="Feedback Captured" value={summary.overview.feedbackReceived} />
       </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Operator Action Queue</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {actionQueue.map((participant) => {
+            const action = participant.operatorAction;
+            return (
+              <div key={participant.id} className="grid gap-4 rounded-md border bg-white p-4 lg:grid-cols-[1fr_auto] lg:items-start">
+                <div>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge className={priorityClass(action.priority)}>{action.priority} priority</Badge>
+                    <Badge variant="outline" className="gap-1">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {action.dueLabel}
+                    </Badge>
+                    <span className="text-sm font-medium text-gray-950">{participant.familyName}</span>
+                    <span className="text-sm text-gray-500">{participant.studentName}, Grade {participant.grade}</span>
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-950">{action.label}</h2>
+                  <p className="mt-2 max-w-4xl rounded-md bg-gray-50 p-3 text-sm leading-6 text-gray-700">
+                    {action.message}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+                  <Button variant="outline" onClick={() => copyMessage(participant.id, action.message)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    {copiedActionId === participant.id ? "Copied" : "Copy Message"}
+                  </Button>
+                  <Link href={actionHref(action.stage)}>
+                    <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
+                      Open Follow-Up
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       <div className="mb-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <Card>

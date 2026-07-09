@@ -10,6 +10,23 @@ export type PilotFunnelStep =
   | "reportViewed"
   | "feedbackReceived";
 
+export type PilotActionPriority = "high" | "medium" | "low";
+
+export interface PilotOperatorAction {
+  stage:
+    | "invite"
+    | "diagnostic"
+    | "first_lesson"
+    | "three_sessions"
+    | "report"
+    | "feedback"
+    | "continuation";
+  priority: PilotActionPriority;
+  label: string;
+  dueLabel: string;
+  message: string;
+}
+
 export interface PilotFeedback {
   id: string;
   studentId: string;
@@ -33,6 +50,7 @@ export interface PilotParticipant {
   confidenceDelta: number;
   sprintReport: SprintReport;
   funnel: Record<PilotFunnelStep, boolean>;
+  operatorAction: PilotOperatorAction;
   feedback?: PilotFeedback;
 }
 
@@ -82,6 +100,109 @@ function getDemoReport(studentId: string) {
   return buildSprintReport(progress);
 }
 
+export function buildPilotOperatorAction(participant: {
+  familyName: string;
+  studentName: string;
+  currentFocus: string;
+  sessionsCompleted: number;
+  funnel: Record<PilotFunnelStep, boolean>;
+  feedback?: PilotFeedback;
+}): PilotOperatorAction {
+  const { familyName, studentName, currentFocus, sessionsCompleted, funnel, feedback } = participant;
+
+  if (!funnel.diagnosticStarted) {
+    return {
+      stage: "invite",
+      priority: "high",
+      label: "Send diagnostic invite",
+      dueLabel: "Today",
+      message: `Hi [Name], we are testing a 2-week Math Recovery Sprint for students who need a clearer math plan. The first step is a short diagnostic for ${studentName}. Start here: [Sprint Link]`,
+    };
+  }
+
+  if (!funnel.diagnosticCompleted) {
+    return {
+      stage: "diagnostic",
+      priority: "high",
+      label: "Help finish diagnostic",
+      dueLabel: "Within 24 hours",
+      message: `Hi [Name], I saw ${studentName} started the diagnostic. If you can finish it this week, MathPath will turn it into the first recovery focus and a parent-ready report.`,
+    };
+  }
+
+  if (!funnel.firstLesson) {
+    return {
+      stage: "first_lesson",
+      priority: "high",
+      label: "Start first lesson",
+      dueLabel: "Next session",
+      message: `Hi [Name], ${studentName}'s diagnostic is ready. The next best step is the first focused lesson on ${currentFocus}, then the sprint can start showing progress.`,
+    };
+  }
+
+  if (!funnel.threeSessions) {
+    return {
+      stage: "three_sessions",
+      priority: "medium",
+      label: "Nudge toward 3 sessions",
+      dueLabel: "Day 7",
+      message: `Hi [Name], ${studentName} has completed ${sessionsCompleted} sprint session${sessionsCompleted === 1 ? "" : "s"}. Three sessions is the first useful proof point before we review the report together.`,
+    };
+  }
+
+  if (!funnel.reportViewed) {
+    return {
+      stage: "report",
+      priority: "high",
+      label: "Send proof report",
+      dueLabel: "Day 14",
+      message: `Hi [Name], ${studentName}'s Math Recovery Sprint report is ready. It shows the first gap, current progress on ${currentFocus}, and the next recommended step.`,
+    };
+  }
+
+  if (!funnel.feedbackReceived) {
+    return {
+      stage: "feedback",
+      priority: "high",
+      label: "Ask for parent feedback",
+      dueLabel: "After report view",
+      message: `Hi [Name], could you reply with whether ${studentName}'s report felt clear and whether you would continue the sprint? One sentence is enough.`,
+    };
+  }
+
+  if (feedback?.continueIntent === "no") {
+    return {
+      stage: "continuation",
+      priority: "medium",
+      label: "Capture objection",
+      dueLabel: "This week",
+      message: `Hi [Name], thank you for the feedback on ${studentName}'s sprint. I would like to understand what would need to change before this feels worth continuing.`,
+    };
+  }
+
+  return {
+    stage: "continuation",
+    priority: "high",
+    label: "Schedule proof call",
+    dueLabel: "This week",
+    message: `Hi [Name], thank you for trying MathPath. ${studentName}'s sprint now has a clear proof point around ${currentFocus}. Would you be open to a 15-minute call to decide whether continuing makes sense?`,
+  };
+}
+
+const actionPriorityRank: Record<PilotActionPriority, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
+
+export function sortParticipantsByAction(participants: PilotParticipant[]) {
+  return [...participants].sort((a, b) => {
+    const priorityDelta = actionPriorityRank[a.operatorAction.priority] - actionPriorityRank[b.operatorAction.priority];
+    if (priorityDelta !== 0) return priorityDelta;
+    return new Date(a.invitedAt).getTime() - new Date(b.invitedAt).getTime();
+  });
+}
+
 function buildParticipant({
   id,
   familyName,
@@ -104,28 +225,39 @@ function buildParticipant({
   funnel: Partial<Record<PilotFunnelStep, boolean>>;
 }): PilotParticipant {
   const currentFocus = report.skillDeltas[0]?.name ?? "First focus skill";
+  const invitedAt = new Date(Date.now() - invitedDaysAgo * 86400000).toISOString();
+  const normalizedFunnel = {
+    invited: true,
+    diagnosticStarted: false,
+    diagnosticCompleted: false,
+    firstLesson: false,
+    threeSessions: false,
+    reportViewed: false,
+    ...funnel,
+    feedbackReceived: Boolean(feedback) || Boolean(funnel.feedbackReceived),
+  };
+  const sessionsCompleted = report.sessionsCompleted;
 
   return {
     id,
     familyName,
     studentName,
     grade,
-    invitedAt: new Date(Date.now() - invitedDaysAgo * 86400000).toISOString(),
+    invitedAt,
     status,
     currentFocus,
-    sessionsCompleted: report.sessionsCompleted,
+    sessionsCompleted,
     confidenceDelta: Math.round((report.confidenceCurrent - report.confidenceStart) * 10) / 10,
     sprintReport: report,
-    funnel: {
-      invited: true,
-      diagnosticStarted: false,
-      diagnosticCompleted: false,
-      firstLesson: false,
-      threeSessions: false,
-      reportViewed: false,
-      ...funnel,
-      feedbackReceived: Boolean(feedback) || Boolean(funnel.feedbackReceived),
-    },
+    funnel: normalizedFunnel,
+    operatorAction: buildPilotOperatorAction({
+      familyName,
+      studentName,
+      currentFocus,
+      sessionsCompleted,
+      funnel: normalizedFunnel,
+      feedback,
+    }),
     feedback,
   };
 }
@@ -259,18 +391,9 @@ export function buildPilotSummary(participants: PilotParticipant[], feedback: Pi
     }
   );
 
-  const nextActions = participants
-    .filter((participant) => participant.status === "needs_nudge" || participant.status === "invited")
-    .map((participant) => {
-      if (participant.status === "invited") {
-        return `Send first diagnostic invite to ${participant.familyName}.`;
-      }
-      return `Nudge ${participant.familyName} to complete three sessions before the next report review.`;
-    });
-
-  if (participants.some((participant) => participant.status === "proof_ready")) {
-    nextActions.unshift("Schedule a 15-minute proof call with families marked proof-ready.");
-  }
+  const nextActions = sortParticipantsByAction(participants)
+    .slice(0, 3)
+    .map((participant) => `${participant.operatorAction.label} for ${participant.familyName}.`);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -302,6 +425,9 @@ export function buildPilotCsv(summary: PilotSummary) {
     "three_sessions",
     "report_viewed",
     "feedback_received",
+    "action_priority",
+    "next_action",
+    "message_draft",
     "clarity_rating",
     "continue_intent",
     "parent_concern",
@@ -322,6 +448,9 @@ export function buildPilotCsv(summary: PilotSummary) {
     participant.funnel.threeSessions,
     participant.funnel.reportViewed,
     participant.funnel.feedbackReceived,
+    participant.operatorAction.priority,
+    participant.operatorAction.label,
+    participant.operatorAction.message,
     participant.feedback?.clarityRating,
     participant.feedback?.continueIntent,
     participant.feedback?.concern,
