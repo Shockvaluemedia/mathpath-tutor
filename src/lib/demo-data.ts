@@ -8,6 +8,7 @@ export const DEMO_USER = {
   name: "Sarah Johnson",
   email: "demo@mathpath.dev",
   role: "PARENT" as const,
+  planId: "free",
 };
 
 export const DEMO_TOKEN = "demo-token-mathpath-2025";

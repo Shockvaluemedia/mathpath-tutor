@@ -8,6 +8,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  planId?: string;
 }
 
 interface Student {

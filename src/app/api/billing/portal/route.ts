@@ -8,10 +8,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { customerId } = body;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
 
     if (DEMO_MODE) {
       return NextResponse.json({
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/plans`,
+        url: `${appUrl}/billing/plans`,
       });
     }
 
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      return_url: `${appUrl}/dashboard`,
     });
 
     return NextResponse.json({ url: session.url });

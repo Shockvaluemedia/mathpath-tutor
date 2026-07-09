@@ -11,9 +11,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Plan and user ID required" }, { status: 400 });
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+
     if (DEMO_MODE) {
       return NextResponse.json({
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id=demo_session`,
+        url: `${appUrl}/billing/success?session_id=demo_session`,
         sessionId: "demo_session",
       });
     }
@@ -31,8 +33,8 @@ export async function POST(request: NextRequest) {
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/plans`,
+      success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/billing/plans`,
       customer_email: email,
       metadata: { userId, planId },
       subscription_data: {

@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
           await prisma.user.update({
             where: { id: userId },
             data: {
+              planId,
               // In production, add subscription fields to the User model:
               // subscriptionId: session.subscription,
-              // planId: planId,
               // subscriptionStatus: "active",
             },
           });
@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
 
         if (userId) {
           console.log(`Subscription cancelled: user=${userId}`);
-          // Downgrade to free plan
+          await prisma.user.update({
+            where: { id: userId },
+            data: { planId: "free" },
+          });
         }
         break;
       }
