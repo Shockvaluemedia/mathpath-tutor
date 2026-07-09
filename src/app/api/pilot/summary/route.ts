@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
-import { buildDemoPilotSummary, buildPilotCsv, buildPilotSummary, PilotFeedback, PilotParticipant } from "@/lib/pilot";
+import { buildDemoPilotSummary, buildPilotCsv, buildPilotOperatorAction, buildPilotSummary, PilotFeedback, PilotParticipant } from "@/lib/pilot";
 import { buildSprintReport } from "@/lib/sprint";
 
 function wantsCsv(request: NextRequest) {
@@ -106,8 +106,19 @@ export async function GET(request: NextRequest) {
         : completedLessons > 0 || diagnosticCompleted
           ? "active"
           : diagnosticStarted
-            ? "needs_nudge"
-            : "invited";
+          ? "needs_nudge"
+          : "invited";
+      const currentFocus = sprintReport.skillDeltas[0]?.name ?? "First focus skill";
+      const sessionsCompleted = sprintReport.sessionsCompleted;
+      const funnel = {
+        invited: true,
+        diagnosticStarted,
+        diagnosticCompleted,
+        firstLesson: completedLessons > 0,
+        threeSessions,
+        reportViewed,
+        feedbackReceived: Boolean(recentFeedback),
+      };
 
       return {
         id: learner.id,
@@ -116,19 +127,19 @@ export async function GET(request: NextRequest) {
         grade: learner.grade,
         invitedAt: learner.createdAt.toISOString(),
         status,
-        currentFocus: sprintReport.skillDeltas[0]?.name ?? "First focus skill",
-        sessionsCompleted: sprintReport.sessionsCompleted,
+        currentFocus,
+        sessionsCompleted,
         confidenceDelta: Math.round((sprintReport.confidenceCurrent - sprintReport.confidenceStart) * 10) / 10,
         sprintReport,
-        funnel: {
-          invited: true,
-          diagnosticStarted,
-          diagnosticCompleted,
-          firstLesson: completedLessons > 0,
-          threeSessions,
-          reportViewed,
-          feedbackReceived: Boolean(recentFeedback),
-        },
+        funnel,
+        operatorAction: buildPilotOperatorAction({
+          familyName: `${learner.guardian?.name ?? "Pilot"} Family`,
+          studentName: learner.name,
+          currentFocus,
+          sessionsCompleted,
+          funnel,
+          feedback: recentFeedback,
+        }),
         feedback: recentFeedback,
       };
     });
