@@ -1,20 +1,35 @@
-## Summary
+## Intent
 
 -
 
-## Verification
+## Files Changed
 
-- [ ] Tests or checks run
-- [ ] Screenshots or visual notes included for UI changes
+-
 
-## Design Compliance
+## Verification Run
 
-For UI changes:
+- [ ] `git diff --check`
+- [ ] Confirmed changed files are limited to the intended scope
+- [ ] App checks run, or skipped with reason below
 
-- [ ] I read `DESIGN.md`
-- [ ] This change follows the app archetype
-- [ ] This change uses the documented token direction
-- [ ] This change avoids the forbidden patterns
-- [ ] I checked the UI against the `DESIGN.md` QA checklist
+Skipped checks:
 
-If this PR has no UI changes, mark the design checklist items N/A in the PR description.
+-
+
+## Known Risks
+
+-
+
+## External Config Needed
+
+-
+
+## Deployment / Runtime Truth
+
+- [ ] No production deployment, workflow, secret, DNS, AWS, Vercel, or external config changes
+- Target checked:
+- Live verification:
+
+## What Codex Should Review Closely
+
+-
