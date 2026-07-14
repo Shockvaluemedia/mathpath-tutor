@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +24,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const access = await requireRequestLearnerAccess(request, studentId);
+    if (!access.ok) return access.response;
 
     const learner = await prisma.learner.findUnique({ where: { id: studentId }, include: { profile: true } });
     if (!learner) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+
+    const assessment = await prisma.assessment.findFirst({
+      where: { id: assessmentId, learnerId: studentId },
+      select: { id: true },
+    });
+    if (!assessment) {
+      return NextResponse.json({ error: "Assessment not found" }, { status: 404 });
+    }
 
     // Get or create a default skill for responses that reference non-existent skills
     const mathDomain = await prisma.subjectDomain.findUnique({ where: { slug: "mathematics" } });

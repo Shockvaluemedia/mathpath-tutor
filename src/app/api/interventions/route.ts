@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import {
+  authenticateRequest,
+  requireRequestLearnerAccess,
+} from "@/lib/auth-middleware";
 
 const DEMO_INTERVENTIONS = [
   {
@@ -67,13 +72,44 @@ const DEMO_INTERVENTIONS = [
   },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (DEMO_MODE) {
     return NextResponse.json({ interventions: DEMO_INTERVENTIONS });
   }
 
-  const { db: prisma } = await import("@/lib/db");
+  const auth = authenticateRequest(request);
+  if (!auth.ok) return auth.response;
+
+  const staffRoles = new Set([
+    "MENTOR",
+    "TEACHER",
+    "TUTOR",
+    "SCHOOL_ADMIN",
+    "ORG_ADMIN",
+    "FACILITATOR",
+  ]);
+  const where = auth.user.role === "ADMIN"
+    ? {}
+    : auth.user.role === "LEARNER"
+      ? { learnerId: auth.user.userId }
+      : staffRoles.has(auth.user.role)
+        ? {
+            learner: {
+              guardian: {
+                memberships: {
+                  some: {
+                    organization: {
+                      memberships: { some: { userId: auth.user.userId } },
+                    },
+                  },
+                },
+              },
+            },
+          }
+        : { learner: { guardianUserId: auth.user.userId } };
+
   const interventions = await prisma.intervention.findMany({
+    where,
     include: { learner: true },
     orderBy: { createdAt: "desc" },
   });
@@ -105,7 +141,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ intervention });
     }
 
-    const { db: prisma } = await import("@/lib/db");
+    const access = await requireRequestLearnerAccess(request, learnerId);
+    if (!access.ok) return access.response;
+
     const intervention = await prisma.intervention.create({
       data: { learnerId, type, reason: reason || "", plan: plan || {}, status: "active" },
     });

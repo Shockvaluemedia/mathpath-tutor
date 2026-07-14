@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 export async function PUT(
   request: NextRequest,
@@ -17,6 +18,9 @@ export async function PUT(
         skill: { id, name, domain, gradeMin, gradeMax, prerequisites: prerequisites || [], description: description || "" },
       });
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
     const skill = await prisma.skill.update({
@@ -48,6 +52,9 @@ export async function DELETE(
     if (DEMO_MODE) {
       return NextResponse.json({ success: true });
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
     await prisma.skill.delete({ where: { id } });

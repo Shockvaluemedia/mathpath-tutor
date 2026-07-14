@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS } from "@/lib/demo-data";
 import { DevelopmentalStage } from "@/lib/types";
 import { prisma } from "@/lib/db";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 function getStage(grade: number): DevelopmentalStage {
   if (grade <= 2) return "EARLY_CHILDHOOD";
@@ -45,14 +45,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Production — use new Learner model
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const auth = requireRequestRole(request, ["PARENT", "ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const learner = await prisma.learner.create({
       data: {
-        guardianUserId: payload.userId,
+        guardianUserId: auth.user.userId,
         name,
         age,
         grade,
@@ -97,13 +95,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ students: DEMO_STUDENTS });
     }
 
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const auth = requireRequestRole(request, ["PARENT", "LEARNER", "ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const learners = await prisma.learner.findMany({
-      where: { guardianUserId: payload.userId },
+      where: auth.user.role === "ADMIN"
+        ? {}
+        : auth.user.role === "LEARNER"
+          ? { id: auth.user.userId }
+          : { guardianUserId: auth.user.userId },
       include: {
         profile: true,
         skillMastery: true,

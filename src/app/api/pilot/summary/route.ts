@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
 import { buildDemoPilotSummary, buildPilotCsv, buildPilotOperatorAction, buildPilotSummary, PilotFeedback, PilotParticipant } from "@/lib/pilot";
 import { buildSprintReport } from "@/lib/sprint";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 function wantsCsv(request: NextRequest) {
   return request.nextUrl.searchParams.get("format") === "csv";
@@ -22,6 +23,9 @@ export async function GET(request: NextRequest) {
       const summary = buildDemoPilotSummary();
       return wantsCsv(request) ? csvResponse(buildPilotCsv(summary)) : NextResponse.json(summary);
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
 

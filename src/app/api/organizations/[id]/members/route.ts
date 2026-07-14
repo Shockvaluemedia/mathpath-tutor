@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { authenticateRequest } from "@/lib/auth-middleware";
 
 const DEMO_MEMBERS: Record<string, any[]> = {
   "org-family-1": [
@@ -20,6 +21,24 @@ export async function GET(
   }
 
   const { db: prisma } = await import("@/lib/db");
+  const auth = authenticateRequest(request);
+  if (!auth.ok) return auth.response;
+
+  if (auth.user.role !== "ADMIN") {
+    const membership = await prisma.organizationMembership.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: id,
+          userId: auth.user.userId,
+        },
+      },
+      select: { id: true },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const memberships = await prisma.organizationMembership.findMany({
     where: { organizationId: id },
     include: { user: { select: { id: true, name: true, email: true } } },
@@ -62,6 +81,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { db: prisma } = await import("@/lib/db");
+    const auth = authenticateRequest(request);
+    if (!auth.ok) return auth.response;
+
+    if (auth.user.role !== "ADMIN") {
+      const membership = await prisma.organizationMembership.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId: id,
+            userId: auth.user.userId,
+          },
+        },
+        select: { role: true },
+      });
+      if (!membership || !["admin", "owner"].includes(membership.role)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
+    const validRoles = new Set(["member", "learner", "mentor", "teacher", "admin"]);
+    if (typeof role !== "string" || !validRoles.has(role)) {
+      return NextResponse.json({ error: "Invalid organization role" }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json({ error: "User not found. They must create an account first." }, { status: 404 });

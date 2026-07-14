@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_PROGRESS } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 export async function GET(
   request: NextRequest,
@@ -18,10 +18,8 @@ export async function GET(
       return NextResponse.json(progress);
     }
 
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const access = await requireRequestLearnerAccess(request, learnerId);
+    if (!access.ok) return access.response;
 
     const learner = await prisma.learner.findUnique({
       where: { id: learnerId },
