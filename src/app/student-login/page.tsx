@@ -8,15 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuth } from "@/components/providers/auth-provider";
-import { GraduationCap } from "lucide-react";
+import { ArrowRight, GraduationCap } from "lucide-react";
 
 export default function StudentLoginPage() {
   const router = useRouter();
-  const { setCurrentStudent } = useAuth();
+  const { loginStudent } = useAuth();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,29 +25,10 @@ export default function StudentLoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/student-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, studentName: name }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        return;
-      }
-
-      // Store auth
-      localStorage.setItem("mathpath_auth", JSON.stringify({ user: data.user, token: data.token }));
-      document.cookie = `mathpath_token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
-
-      // Set current student
-      setCurrentStudent(data.student);
-
-      // Students go straight to learn
+      await loginStudent(code, name);
       router.push("/learn");
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -81,8 +63,10 @@ export default function StudentLoginPage() {
                 id="code"
                 placeholder="Enter your code"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
                 required
+                autoComplete="one-time-code"
+                spellCheck={false}
                 className="text-lg tracking-wider text-center font-mono"
               />
               <p className="text-xs text-gray-500">Ask your parent for your access code</p>
@@ -93,7 +77,8 @@ export default function StudentLoginPage() {
             )}
 
             <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
-              {loading ? "Logging in..." : "Start Learning! 🚀"}
+              {loading ? "Logging in..." : "Start Learning"}
+              {!loading && <ArrowRight className="h-4 w-4 ml-2" />}
             </Button>
           </form>
 
@@ -104,12 +89,13 @@ export default function StudentLoginPage() {
             </Link>
           </div>
 
-          {/* Demo hint */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 text-center">
-              <span className="font-medium">Demo:</span> Enter any name (Alex or Maya) with any code
-            </p>
-          </div>
+          {isDemoMode && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-500 text-center">
+                <span className="font-medium">Demo:</span> Enter Alex or Maya with any code
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

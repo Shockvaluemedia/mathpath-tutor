@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import type { SignOptions } from "jsonwebtoken";
 import { UserRole } from "./types";
 
 const DEVELOPMENT_JWT_SECRET = "mathpath-dev-secret-change-in-production";
@@ -15,7 +16,7 @@ const USER_ROLES = new Set<UserRole>([
   "ADMIN",
 ]);
 
-function getJwtSecret(): string {
+export function getAuthSecret(): string {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
 
   const productionApp =
@@ -43,13 +44,16 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
+export function generateToken(
+  payload: TokenPayload,
+  expiresIn: SignOptions["expiresIn"] = "7d"
+): string {
+  return jwt.sign(payload, getAuthSecret(), { expiresIn });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    const payload = jwt.verify(token, getJwtSecret());
+    const payload = jwt.verify(token, getAuthSecret());
     if (
       typeof payload === "string" ||
       typeof payload.userId !== "string" ||

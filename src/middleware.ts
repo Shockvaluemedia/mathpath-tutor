@@ -23,6 +23,7 @@ export function middleware(request: NextRequest) {
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   const token = request.cookies.get("mathpath_token")?.value;
+  const roleHint = request.cookies.get("mathpath_role")?.value;
 
   // Protected routes: redirect to login if no token (unless demo mode)
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
@@ -35,8 +36,8 @@ export function middleware(request: NextRequest) {
   // Auth routes: redirect if already logged in
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   if (isAuthRoute && token) {
-    // Check if it's a student token to redirect appropriately
-    const isStudentToken = token.startsWith("demo-student-token");
+    // The role hint affects redirect UX only; API access still requires a verified JWT.
+    const isStudentToken = token.startsWith("demo-student-token") || roleHint === "LEARNER";
     const redirectTo = isStudentToken ? "/learn" : "/dashboard";
     return NextResponse.redirect(new URL(redirectTo, request.url));
   }
