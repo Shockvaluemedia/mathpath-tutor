@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useToast } from "@/components/ui/toast";
 import {
   CheckCircle, Clock, AlertCircle, Send, Copy, RefreshCw,
-  BookOpen, Link2
+  BookOpen, Link2, Link2Off
 } from "lucide-react";
 
 interface StudentStatusProps {
@@ -28,7 +28,9 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
   const { apiRequest } = useAuth();
   const { toast } = useToast();
   const [link, setLink] = useState<string | null>(null);
+  const [accessCode, setAccessCode] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const generateLink = async () => {
@@ -39,12 +41,29 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
         body: JSON.stringify({ studentId: student.id, studentName: student.name }),
       });
       setLink(data.link);
+      setAccessCode(data.accessCode);
       toast("success", "Diagnostic link generated!");
-    } catch {
-      // Fallback
-      setLink(`${window.location.origin}/d/${Math.random().toString(36).slice(2, 10)}`);
+    } catch (caught) {
+      toast("error", caught instanceof Error ? caught.message : "Could not generate a diagnostic link.");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const revokeLink = async () => {
+    setRevoking(true);
+    try {
+      await apiRequest("/api/diagnostic/link", {
+        method: "DELETE",
+        body: JSON.stringify({ studentId: student.id }),
+      });
+      setLink(null);
+      setAccessCode(null);
+      toast("success", "Learner access revoked.");
+    } catch (caught) {
+      toast("error", caught instanceof Error ? caught.message : "Could not revoke learner access.");
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -81,6 +100,20 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
     } catch {
       // Last resort: prompt user to copy manually
       window.prompt("Copy this link:", link);
+    }
+  };
+
+  const copyAccessCode = async () => {
+    if (!accessCode) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(accessCode);
+      } else {
+        window.prompt("Copy this access code:", accessCode);
+      }
+      toast("success", "Access code copied!");
+    } catch {
+      window.prompt("Copy this access code:", accessCode);
     }
   };
 
@@ -163,11 +196,28 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
                 {copied ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
-            <div className="flex gap-2">
+            {accessCode && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-white px-3 py-2">
+                <div>
+                  <p className="text-xs text-gray-500">Student access code</p>
+                  <p className="font-mono font-semibold tracking-wider text-gray-900">{accessCode}</p>
+                </div>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={copyAccessCode}
+                  aria-label="Copy student access code"
+                  title="Copy student access code"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 text-xs"
+                className="col-span-2 text-xs"
                 onClick={() => {
                   if (typeof navigator !== "undefined" && navigator.share && window.isSecureContext) {
                     navigator.share({ title: `${student.name}'s Math Diagnostic`, url: link! }).catch(() => copyLink());
@@ -183,14 +233,25 @@ export function StudentStatusCard({ student, diagnosticStatus, lastActiveAt, les
                 size="sm"
                 variant="ghost"
                 className="text-xs"
-                onClick={() => { setLink(null); }}
+                onClick={generateLink}
+                disabled={generating || revoking}
               >
                 <RefreshCw className="h-3 w-3 mr-1" />
-                New Link
+                {generating ? "Replacing..." : "New Link"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-red-600 hover:text-red-700"
+                onClick={revokeLink}
+                disabled={revoking || generating}
+              >
+                <Link2Off className="h-3 w-3 mr-1" />
+                {revoking ? "Revoking..." : "Revoke"}
               </Button>
             </div>
             <p className="text-xs text-gray-400">
-              ✓ No login needed — {student.name} just opens the link and starts
+              This credential expires in 7 days. A new link immediately replaces the old one.
             </p>
           </div>
         )}

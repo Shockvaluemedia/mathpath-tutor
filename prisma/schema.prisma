@@ -145,8 +145,24 @@ model Learner {
   reports             ProgressReport[]
   interventions       Intervention[]
   emotionalLogs       EmotionalLog[]
+  accessCredential    LearnerAccessCredential?
 
   @@map("learners")
+}
+
+model LearnerAccessCredential {
+  id         String    @id @default(uuid())
+  learnerId  String    @unique @map("learner_id")
+  codeHash   String    @unique @map("code_hash")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  learner Learner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@map("learner_access_credentials")
 }
 
 model LearnerProfile {

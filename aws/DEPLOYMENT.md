@@ -154,7 +154,7 @@ aws ecs create-service \
 
 ### 6. Database Migration
 
-After RDS is running:
+After RDS is running, apply schema changes before updating ECS to an image that uses them. The CI workflow generates the Prisma client but does not modify RDS.
 
 ```bash
 # From local machine or a bastion host

@@ -25,12 +25,15 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  loginStudent: (code: string, studentName?: string) => Promise<Student>;
   logout: () => void;
   setCurrentStudent: (student: Student | null) => void;
   apiRequest: (endpoint: string, options?: RequestInit) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const DEFAULT_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+const LEARNER_SESSION_MAX_AGE_SECONDS = 24 * 60 * 60;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -63,16 +66,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Persist auth state
-  const persistAuth = useCallback((newUser: User | null, newToken: string | null) => {
+  const persistAuth = useCallback((
+    newUser: User | null,
+    newToken: string | null,
+    maxAgeSeconds: number = DEFAULT_SESSION_MAX_AGE_SECONDS
+  ) => {
     setUser(newUser);
     setToken(newToken);
     if (newUser && newToken) {
       localStorage.setItem("mathpath_auth", JSON.stringify({ user: newUser, token: newToken }));
-      // Set cookie for middleware
-      document.cookie = `mathpath_token=${newToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+      const secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = `mathpath_token=${newToken}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${secure}`;
+      document.cookie = `mathpath_role=${newUser.role}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${secure}`;
     } else {
       localStorage.removeItem("mathpath_auth");
       document.cookie = "mathpath_token=; path=/; max-age=0";
+      document.cookie = "mathpath_role=; path=/; max-age=0";
     }
   }, []);
 
@@ -115,6 +124,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistAuth(data.user, data.token);
   }, [persistAuth]);
 
+  const loginStudent = useCallback(async (code: string, studentName?: string) => {
+    const response = await fetch("/api/auth/student-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, studentName }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Student login failed");
+    }
+
+    persistAuth(data.user, data.token, LEARNER_SESSION_MAX_AGE_SECONDS);
+    setCurrentStudent(data.student);
+    return data.student;
+  }, [persistAuth, setCurrentStudent]);
+
   const logout = useCallback(() => {
     persistAuth(null, null);
     setCurrentStudent(null);
@@ -134,9 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await response.json();
 
     if (response.status === 401) {
-      // Token expired — log out
+      const loginPath = user?.role === "LEARNER" ? "/student-login" : "/login";
       persistAuth(null, null);
-      router.push("/login");
+      router.push(loginPath);
       throw new Error("Session expired. Please log in again.");
     }
 
@@ -145,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return data;
-  }, [token, persistAuth, router]);
+  }, [token, user, persistAuth, router]);
 
   return (
     <AuthContext.Provider
@@ -156,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         signup,
+        loginStudent,
         logout,
         setCurrentStudent,
         apiRequest,

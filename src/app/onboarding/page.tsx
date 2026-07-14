@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/auth-provider";
-import { BookOpen, Brain, Users } from "lucide-react";
+import { BookOpen, Brain, Copy, Users } from "lucide-react";
 
 const LEARNING_STYLES = [
   { id: "visual", label: "Visual", description: "Pictures, diagrams, colors" },
@@ -29,6 +29,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0); // 0 = intro, 1-3 = form steps, 4 = ready
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [createdStudentId, setCreatedStudentId] = useState("");
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -73,6 +74,7 @@ export default function OnboardingPage() {
         grade: data.student.grade,
         gradeBand: data.student.gradeBand,
       });
+      setCreatedStudentId(data.student.id);
 
       setStep(4); // Show "ready" screen
     } catch (err: any) {
@@ -319,7 +321,7 @@ export default function OnboardingPage() {
                 title="Send a link"
                 description={`Text or email a link to ${form.name}'s device. They can start whenever they're ready.`}
                 action={
-                  <SendLinkButton studentId={form.name} apiRequest={apiRequest} />
+                  <SendLinkButton studentId={createdStudentId} apiRequest={apiRequest} />
                 }
               />
 
@@ -389,51 +391,59 @@ function DeliveryOption({ icon, title, description, action }: { icon: string; ti
 
 function SendLinkButton({ studentId, apiRequest }: { studentId: string; apiRequest: any }) {
   const [link, setLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [accessCode, setAccessCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState<"link" | "code" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const generateLink = async () => {
     setLoading(true);
+    setError("");
     try {
       const data = await apiRequest("/api/diagnostic/link", {
         method: "POST",
-        body: JSON.stringify({ studentId, studentName: studentId }),
+        body: JSON.stringify({ studentId }),
       });
       setLink(data.link);
-    } catch {
-      // Fallback link for demo
-      setLink(`${window.location.origin}/d/${Math.random().toString(36).slice(2, 10)}`);
+      setAccessCode(data.accessCode);
+    } catch (caught) {
+      setLink(null);
+      setAccessCode(null);
+      setError(caught instanceof Error ? caught.message : "Could not generate a link. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const copyLink = () => {
-    if (link) {
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(link);
-        } else {
-          const textarea = document.createElement("textarea");
-          textarea.value = link;
-          textarea.style.position = "fixed";
-          textarea.style.left = "-9999px";
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand("copy");
-          document.body.removeChild(textarea);
-        }
-      } catch {}
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const copyValue = async (value: string, target: "link" | "code") => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(target);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      setError("Could not copy automatically. Select the value and copy it manually.");
     }
   };
 
   if (!link) {
     return (
-      <Button className="w-full" onClick={generateLink} disabled={loading}>
-        {loading ? "Generating..." : "Generate Link"}
-      </Button>
+      <div className="space-y-2">
+        <Button className="w-full" onClick={generateLink} disabled={loading || !studentId}>
+          {loading ? "Generating..." : "Generate Link"}
+        </Button>
+        {error && <p className="text-xs text-red-600" aria-live="polite">{error}</p>}
+      </div>
     );
   }
 
@@ -446,11 +456,31 @@ function SendLinkButton({ studentId, apiRequest }: { studentId: string; apiReque
           readOnly
           className="flex-1 px-3 py-2 text-sm border rounded-lg bg-gray-50 text-gray-700 truncate"
         />
-        <Button size="sm" variant="outline" onClick={copyLink}>
-          {copied ? "Copied!" : "Copy"}
+        <Button size="sm" variant="outline" onClick={() => copyValue(link, "link")}>
+          {copied === "link" ? "Copied!" : "Copy"}
         </Button>
       </div>
-      <p className="text-xs text-gray-500">Send this link via text, email, or any messaging app. No login needed.</p>
+      {accessCode && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border bg-gray-50 px-3 py-2">
+          <div>
+            <p className="text-xs text-gray-500">Student access code</p>
+            <p className="font-mono font-semibold tracking-wider text-gray-900">{accessCode}</p>
+          </div>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => copyValue(accessCode, "code")}
+            aria-label="Copy student access code"
+            title="Copy student access code"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      <p className="text-xs text-gray-500">
+        Send the link or access code. Generating another one replaces this credential.
+      </p>
+      {error && <p className="text-xs text-red-600" aria-live="polite">{error}</p>}
     </div>
   );
 }
