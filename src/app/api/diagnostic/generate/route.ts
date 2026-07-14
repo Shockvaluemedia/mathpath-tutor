@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_DIAGNOSTIC_QUESTIONS, DEMO_STUDENTS } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
-import { verifyToken, getTokenFromHeader } from "@/lib/auth";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 function getGradeBand(grade: number): string {
   if (grade <= 2) return "EARLY_ELEMENTARY";
@@ -27,10 +27,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Production
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const access = await requireRequestLearnerAccess(request, studentId);
+    if (!access.ok) return access.response;
 
     const learner = await prisma.learner.findUnique({
       where: { id: studentId },

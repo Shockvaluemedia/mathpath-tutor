@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS, DEMO_PROGRESS } from "@/lib/demo-data";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 // Returns learners assigned to the current mentor/teacher
 
@@ -25,15 +26,31 @@ export async function GET(request: NextRequest) {
   }
 
   const { db: prisma } = await import("@/lib/db");
-  const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
+  const auth = requireRequestRole(request, [
+    "MENTOR",
+    "TEACHER",
+    "TUTOR",
+    "SCHOOL_ADMIN",
+    "ORG_ADMIN",
+    "FACILITATOR",
+    "ADMIN",
+  ]);
+  if (!auth.ok) return auth.response;
 
-  const token = getTokenFromHeader(request.headers.get("authorization"));
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const payload = verifyToken(token);
-  if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-
-  // In production, query learners assigned to this mentor via org memberships
   const learners = await prisma.learner.findMany({
+    where: auth.user.role === "ADMIN"
+      ? {}
+      : {
+          guardian: {
+            memberships: {
+              some: {
+                organization: {
+                  memberships: { some: { userId: auth.user.userId } },
+                },
+              },
+            },
+          },
+        },
     include: { profile: true, skillMastery: true },
   });
 

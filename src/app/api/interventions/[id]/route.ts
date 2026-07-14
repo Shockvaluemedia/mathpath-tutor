@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +16,16 @@ export async function PATCH(
       return NextResponse.json({ success: true, id, status: status || "active", note });
     }
 
-    const { db: prisma } = await import("@/lib/db");
+    const existing = await prisma.intervention.findUnique({
+      where: { id },
+      select: { learnerId: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Intervention not found" }, { status: 404 });
+    }
+
+    const access = await requireRequestLearnerAccess(request, existing.learnerId);
+    if (!access.ok) return access.response;
 
     const updateData: any = {};
     if (status) {

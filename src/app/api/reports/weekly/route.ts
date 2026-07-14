@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,13 +42,10 @@ export async function POST(request: NextRequest) {
 
     // Production
     const { db: prisma } = await import("@/lib/db");
-    const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
     const { generateParentReport } = await import("@/lib/ai");
 
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const access = await requireRequestLearnerAccess(request, studentId);
+    if (!access.ok) return access.response;
 
     const student = await prisma.student.findUnique({
       where: { id: studentId },

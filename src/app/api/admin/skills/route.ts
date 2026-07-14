@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 // In-memory store for demo mode
 const demoSkills = [
@@ -23,10 +24,13 @@ const demoSkills = [
   { id: "18", name: "Statistics & Probability", domain: "Data", gradeMin: 9, gradeMax: 12, prerequisites: ["12"], description: "Mean, median, mode, standard deviation, probability" },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (DEMO_MODE) {
     return NextResponse.json({ skills: demoSkills });
   }
+
+  const auth = requireRequestRole(request, ["ADMIN"]);
+  if (!auth.ok) return auth.response;
 
   const { db: prisma } = await import("@/lib/db");
   const skills = await prisma.skill.findMany({ orderBy: [{ gradeMin: "asc" }, { name: "asc" }] });
@@ -55,6 +59,9 @@ export async function POST(request: NextRequest) {
       demoSkills.push(newSkill);
       return NextResponse.json({ skill: newSkill });
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
     const skill = await prisma.skill.create({

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { prisma } from "@/lib/db";
+import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,40 +20,62 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Production
-    const { db: prisma } = await import("@/lib/db");
-    const { verifyToken, getTokenFromHeader } = await import("@/lib/auth");
+    const access = await requireRequestLearnerAccess(request, studentId);
+    if (!access.ok) return access.response;
 
-    const token = getTokenFromHeader(request.headers.get("authorization"));
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const payload = verifyToken(token);
-    if (!payload) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const lesson = await prisma.learningModule.findFirst({
+      where: { id: lessonId, learnerId: studentId },
+      include: { skill: true },
+    });
+    if (!lesson) {
+      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    }
 
-    const lesson = await prisma.lesson.update({
-      where: { id: lessonId },
-      data: { completedAt: new Date() },
-      include: { focusSkill: true },
+    const responseList = Array.isArray(responses) ? responses : [];
+    const completedAt = new Date();
+    const accuracy = responseList.length > 0
+      ? responseList.filter((response: { isCorrect?: boolean }) => response.isCorrect).length / responseList.length
+      : null;
+
+    await prisma.learningModule.update({
+      where: { id: lesson.id },
+      data: {
+        completedAt,
+        score: accuracy === null ? undefined : accuracy * 100,
+      },
     });
 
-    if (responses && responses.length > 0) {
-      const correctCount = responses.filter((r: any) => r.isCorrect).length;
-      const accuracy = correctCount / responses.length;
+    if (accuracy !== null) {
       const masteryGain = accuracy * 15;
+      const existingMastery = await prisma.learnerSkillMastery.findUnique({
+        where: {
+          learnerId_skillId: { learnerId: studentId, skillId: lesson.skillId },
+        },
+      });
+      const status = accuracy >= 0.8
+        ? "MASTERED"
+        : accuracy >= 0.5
+          ? "PRACTICING"
+          : "DEVELOPING";
 
-      await prisma.studentSkillMastery.upsert({
-        where: { studentId_skillId: { studentId, skillId: lesson.focusSkillId } },
+      await prisma.learnerSkillMastery.upsert({
+        where: {
+          learnerId_skillId: { learnerId: studentId, skillId: lesson.skillId },
+        },
         update: {
-          masteryScore: { increment: Math.min(masteryGain, 100) },
-          confidenceScore: { increment: accuracy * 10 },
-          status: accuracy >= 0.8 ? "MASTERED" : accuracy >= 0.5 ? "PRACTICING" : "DEVELOPING",
+          masteryScore: Math.min((existingMastery?.masteryScore ?? 0) + masteryGain, 100),
+          confidenceScore: Math.min((existingMastery?.confidenceScore ?? 0) + accuracy * 10, 100),
+          status,
+          attempts: { increment: 1 },
           lastPracticed: new Date(),
         },
         create: {
-          studentId,
-          skillId: lesson.focusSkillId,
+          learnerId: studentId,
+          skillId: lesson.skillId,
           masteryScore: masteryGain,
           confidenceScore: accuracy * 10,
-          status: accuracy >= 0.8 ? "MASTERED" : accuracy >= 0.5 ? "PRACTICING" : "DEVELOPING",
+          status,
+          attempts: 1,
           lastPracticed: new Date(),
         },
       });
@@ -59,8 +83,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      completedAt: lesson.completedAt,
-      skillName: lesson.focusSkill.name,
+      completedAt,
+      skillName: lesson.skill.name,
     });
   } catch (error) {
     console.error("Complete lesson error:", error);

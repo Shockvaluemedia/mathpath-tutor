@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS, DEMO_PROGRESS } from "@/lib/demo-data";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,6 +30,9 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ students, total: students.length });
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
 

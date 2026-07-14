@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { authenticateRequest, requireRequestRole } from "@/lib/auth-middleware";
 
 const DEMO_ORGS = [
   {
@@ -13,13 +14,19 @@ const DEMO_ORGS = [
   },
 ];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (DEMO_MODE) {
     return NextResponse.json({ organizations: DEMO_ORGS });
   }
 
+  const auth = authenticateRequest(request);
+  if (!auth.ok) return auth.response;
+
   const { db: prisma } = await import("@/lib/db");
   const orgs = await prisma.organization.findMany({
+    where: auth.user.role === "ADMIN"
+      ? {}
+      : { memberships: { some: { userId: auth.user.userId } } },
     include: { memberships: true },
   });
   return NextResponse.json({
@@ -53,6 +60,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ organization: org });
     }
 
+    const auth = requireRequestRole(request, [
+      "PARENT",
+      "SCHOOL_ADMIN",
+      "ORG_ADMIN",
+      "ADMIN",
+    ]);
+    if (!auth.ok) return auth.response;
+
     const { db: prisma } = await import("@/lib/db");
     const org = await prisma.organization.create({
       data: {
@@ -60,6 +75,9 @@ export async function POST(request: NextRequest) {
         type,
         slug: slug || name.toLowerCase().replace(/[^a-z0-9]/g, "-"),
         settings: {},
+        memberships: {
+          create: { userId: auth.user.userId, role: "admin" },
+        },
       },
     });
     return NextResponse.json({ organization: org });

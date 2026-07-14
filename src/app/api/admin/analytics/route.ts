@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
+import { requireRequestRole } from "@/lib/auth-middleware";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (DEMO_MODE) {
       return NextResponse.json({
@@ -40,6 +41,9 @@ export async function GET() {
         ],
       });
     }
+
+    const auth = requireRequestRole(request, ["ADMIN"]);
+    if (!auth.ok) return auth.response;
 
     const { db: prisma } = await import("@/lib/db");
 
