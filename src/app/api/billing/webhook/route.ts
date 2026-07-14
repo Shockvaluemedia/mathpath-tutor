@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
         const session = event.data.object;
         const userId = session.metadata?.userId;
         const planId = session.metadata?.planId;
+        const stripeCustomerId = typeof session.customer === "string"
+          ? session.customer
+          : session.customer?.id;
 
         if (userId && planId) {
           // Update user's subscription in database
@@ -39,6 +42,7 @@ export async function POST(request: NextRequest) {
             where: { id: userId },
             data: {
               planId,
+              ...(stripeCustomerId && { stripeCustomerId }),
               // In production, add subscription fields to the User model:
               // subscriptionId: session.subscription,
               // subscriptionStatus: "active",

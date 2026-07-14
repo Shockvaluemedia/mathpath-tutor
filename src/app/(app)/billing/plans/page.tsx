@@ -123,8 +123,6 @@ export default function PlansPage() {
         body: JSON.stringify({
           planId,
           interval,
-          userId: user?.id,
-          email: user?.email,
         }),
       });
 
