@@ -1,4 +1,5 @@
 // AI Provider abstraction — supports OpenAI and Amazon Bedrock
+import { recordAIUsageEvent } from "@/lib/observability";
 
 export type AIProvider = "openai" | "bedrock";
 
@@ -17,19 +18,67 @@ export interface ChatOptions {
   temperature?: number;
   jsonMode?: boolean;
   maxTokens?: number;
+  observability?: {
+    requestId?: string;
+    learnerId?: string;
+    sessionId?: string;
+    operationType: string;
+    generationMode?: "AI" | "FALLBACK";
+    metadata?: Record<string, string | number | boolean | null>;
+  };
+}
+
+interface CompletionResult {
+  content: string;
+  inputTokens: number;
+  outputTokens: number;
 }
 
 /**
  * Unified chat completion function that works with both OpenAI and Bedrock
  */
 export async function chatCompletion(options: ChatOptions): Promise<string> {
-  if (AI_PROVIDER === "bedrock") {
-    return bedrockCompletion(options);
+  const startedAt = Date.now();
+  try {
+    const result = AI_PROVIDER === "bedrock"
+      ? await bedrockCompletion(options)
+      : await openaiCompletion(options);
+    await recordAIUsageEvent({
+      requestId: options.observability?.requestId,
+      learnerId: options.observability?.learnerId,
+      sessionId: options.observability?.sessionId,
+      operationType: options.observability?.operationType ?? "UNCLASSIFIED_AI_OPERATION",
+      provider: AI_PROVIDER,
+      model: AI_MODEL,
+      generationMode: options.observability?.generationMode,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      latencyMs: Date.now() - startedAt,
+      success: true,
+      metadata: options.observability?.metadata,
+    });
+    return result.content;
+  } catch (error) {
+    await recordAIUsageEvent({
+      requestId: options.observability?.requestId,
+      learnerId: options.observability?.learnerId,
+      sessionId: options.observability?.sessionId,
+      operationType: options.observability?.operationType ?? "UNCLASSIFIED_AI_OPERATION",
+      provider: AI_PROVIDER,
+      model: AI_MODEL,
+      generationMode: options.observability?.generationMode,
+      inputTokens: 0,
+      outputTokens: 0,
+      latencyMs: Date.now() - startedAt,
+      success: false,
+      errorCode: error instanceof Error ? error.name : "UNKNOWN",
+      metadata: options.observability?.metadata,
+    });
+    throw error;
   }
-  return openaiCompletion(options);
 }
 
-async function openaiCompletion(options: ChatOptions): Promise<string> {
+async function openaiCompletion(options: ChatOptions): Promise<CompletionResult> {
   const OpenAI = (await import("openai")).default;
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "sk-placeholder" });
 
@@ -43,10 +92,14 @@ async function openaiCompletion(options: ChatOptions): Promise<string> {
 
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error("No response from OpenAI");
-  return content;
+  return {
+    content,
+    inputTokens: response.usage?.prompt_tokens ?? 0,
+    outputTokens: response.usage?.completion_tokens ?? 0,
+  };
 }
 
-async function bedrockCompletion(options: ChatOptions): Promise<string> {
+async function bedrockCompletion(options: ChatOptions): Promise<CompletionResult> {
   const { BedrockRuntimeClient, InvokeModelCommand } = await import("@aws-sdk/client-bedrock-runtime");
 
   const client = new BedrockRuntimeClient({ region: AWS_REGION });
@@ -92,10 +145,18 @@ async function bedrockCompletion(options: ChatOptions): Promise<string> {
   // Strip markdown code blocks if present (Claude sometimes wraps JSON in ```json...```)
   if (options.jsonMode) {
     const stripped = content.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
-    return stripped;
+    return {
+      content: stripped,
+      inputTokens: Number(responseBody.usage?.input_tokens ?? 0),
+      outputTokens: Number(responseBody.usage?.output_tokens ?? 0),
+    };
   }
 
-  return content;
+  return {
+    content,
+    inputTokens: Number(responseBody.usage?.input_tokens ?? 0),
+    outputTokens: Number(responseBody.usage?.output_tokens ?? 0),
+  };
 }
 
 export function getSystemPromptForGradeBand(gradeBand: string): string {

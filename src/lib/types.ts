@@ -10,7 +10,7 @@ export type MasteryStatus = "NOT_STARTED" | "EMERGING" | "DEVELOPING" | "PRACTIC
 
 export type UserRole = "LEARNER" | "PARENT" | "MENTOR" | "TEACHER" | "TUTOR" | "SCHOOL_ADMIN" | "ORG_ADMIN" | "FACILITATOR" | "ADMIN";
 
-export type InterventionType = "TUTORING" | "REMEDIATION" | "CONFIDENCE_RECOVERY" | "RESTORATIVE_COACHING" | "MENTORING" | "PARENT_ENGAGEMENT" | "WORKFORCE_PATHWAY";
+export type InterventionType = "TUTORING" | "HUMAN_TUTOR_ESCALATION" | "REMEDIATION" | "CONFIDENCE_RECOVERY" | "RESTORATIVE_COACHING" | "MENTORING" | "PARENT_ENGAGEMENT" | "WORKFORCE_PATHWAY";
 
 export type ContentType = "LESSON" | "VIDEO" | "QUIZ" | "PROJECT" | "REFLECTION" | "DISCUSSION" | "MENTORSHIP_PROMPT" | "RESTORATIVE_EXERCISE" | "PDF";
 
@@ -57,6 +57,9 @@ export interface LearnerProfile {
   strengths: string[];
   challenges: string[];
   preferences: LearningPreferences;
+  cognitiveSummary?: Record<string, unknown>;
+  cognitiveModelVersion?: string;
+  cognitiveModelUpdatedAt?: string;
 }
 
 export interface LearningPreferences {

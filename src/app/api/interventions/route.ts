@@ -6,7 +6,7 @@ import {
   requireRequestLearnerAccess,
 } from "@/lib/auth-middleware";
 
-const DEMO_INTERVENTIONS = [
+const DEMO_INTERVENTIONS: Array<Record<string, unknown>> = [
   {
     id: "int-1",
     learnerId: "demo-student-2",
@@ -37,6 +37,19 @@ const DEMO_INTERVENTIONS = [
         { date: new Date(Date.now() - 86400000).toISOString(), note: "Introduced one-step equations with scaffolding. Slight hesitation but no frustration.", author: "System" },
       ],
     },
+    latestDecision: {
+      status: "TRIGGERED",
+      reasonCodes: ["DECLINING_REPORTED_CONFIDENCE", "RECURRING_FRUSTRATION"],
+      evidence: { currentConfidence: 4, previousConfidence: 6, frustrationEvents: 3, recentFailureCount: 3 },
+      thresholds: { confidenceDecline: -2, frustrationEvents: 2, repeatedFailures: 3 },
+      actions: ["Begin with one verified, reachable success.", "Reduce step size and session load.", "Recheck confidence after independent work."],
+      systemConfidence: 0.72,
+      evaluatedAt: new Date().toISOString(),
+    },
+    outcomeRecords: [
+      { id: "out-1", metric: "confidence_rating", baselineValue: 4, currentValue: 5, targetValue: 6, status: "IN_PROGRESS", measuredAt: new Date().toISOString() },
+      { id: "out-2", metric: "frustration_events", baselineValue: 3, currentValue: 1, targetValue: 1, status: "ACHIEVED", measuredAt: new Date().toISOString() },
+    ],
   },
   {
     id: "int-2",
@@ -69,6 +82,18 @@ const DEMO_INTERVENTIONS = [
         { date: new Date(Date.now() - 86400000).toISOString(), note: "Division reached 82%! ✓ Goal 1 met. Moving to visual fractions.", author: "System" },
       ],
     },
+    latestDecision: {
+      status: "TRIGGERED",
+      reasonCodes: ["REPEATED_TARGET_FAILURE", "PREREQUISITE_BELOW_READINESS"],
+      evidence: { targetFailureCount: 3, prerequisiteMastery: 0.42, prerequisiteSkill: "Fraction Equivalence" },
+      thresholds: { targetFailures: 3, prerequisiteMasteryBelow: 0.6 },
+      actions: ["Move to the lowest unresolved required prerequisite.", "Collect independent prerequisite evidence before returning to the target.", "Use a discriminating check to confirm the blocker."],
+      systemConfidence: 0.68,
+      evaluatedAt: new Date().toISOString(),
+    },
+    outcomeRecords: [
+      { id: "out-3", metric: "prerequisite_mastery", baselineValue: 0.42, currentValue: 0.58, targetValue: 0.6, status: "IN_PROGRESS", measuredAt: new Date().toISOString() },
+    ],
   },
 ];
 
@@ -110,10 +135,18 @@ export async function GET(request: NextRequest) {
 
   const interventions = await prisma.intervention.findMany({
     where,
-    include: { learner: true },
+    include: {
+      learner: { select: { id: true, name: true, grade: true, developmentalStage: true } },
+      decisions: { orderBy: { evaluatedAt: "desc" }, take: 1 },
+      outcomeRecords: { orderBy: { measuredAt: "desc" }, take: 20 },
+    },
     orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json({ interventions });
+  return NextResponse.json({ interventions: interventions.map((intervention) => ({
+    ...intervention,
+    learnerName: intervention.learner.name,
+    latestDecision: intervention.decisions[0] ?? null,
+  })) });
 }
 
 export async function POST(request: NextRequest) {
@@ -136,6 +169,8 @@ export async function POST(request: NextRequest) {
         plan: plan || { goals: [], steps: [], duration: "2 weeks", successCriteria: [] },
         startedAt: new Date().toISOString(),
         progress: { daysActive: 0, goalsMetCount: 0, totalGoals: plan?.goals?.length || 0, notes: [] },
+        latestDecision: null,
+        outcomeRecords: [],
       };
       DEMO_INTERVENTIONS.push(intervention);
       return NextResponse.json({ intervention });

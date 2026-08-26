@@ -45,18 +45,17 @@ const PLANS: PricingPlan[] = [
   {
     id: "PILOT",
     name: "Math Recovery Sprint",
-    eyebrow: "Best first step",
-    description: "Run the 2-week proof loop before choosing a subscription.",
-    priceMonthly: 0,
-    priceNote: "Open during pilot",
+    eyebrow: "Founding family offer",
+    description: "A one-time, 2-week measured recovery sprint before any subscription.",
+    priceMonthly: 49,
+    priceNote: "one time",
     features: [
       "10-session sprint plan",
-      "Before/after skill proof",
+      "Recorded baseline and endline checks",
       "Parent clarity feedback",
-      "CSV evidence for follow-up",
+      "Measured parent proof report",
     ],
-    cta: "Start Sprint",
-    href: "/sprint",
+    cta: "Purchase Sprint",
     popular: true,
   },
   {
@@ -107,13 +106,13 @@ const proofMetrics = [
 ];
 
 export default function PlansPage() {
-  const { user, apiRequest } = useAuth();
+  const { user, currentStudent, apiRequest } = useAuth();
   const [interval, setInterval] = useState<BillingInterval>("monthly");
   const [loading, setLoading] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const currentPlanId = (user?.planId || "free").toUpperCase();
 
-  const handleUpgrade = async (planId: "GROWTH" | "FAMILY") => {
+  const handleUpgrade = async (planId: "SPRINT" | "GROWTH" | "FAMILY") => {
     setLoading(planId);
     setCheckoutError(null);
 
@@ -123,6 +122,7 @@ export default function PlansPage() {
         body: JSON.stringify({
           planId,
           interval,
+          studentId: currentStudent?.id,
         }),
       });
 
@@ -258,7 +258,7 @@ export default function PlansPage() {
                 <PlanAction
                   plan={plan}
                   isCurrentPlan={isCurrentPlan}
-                  loading={loading === plan.id}
+                  loading={loading === (plan.id === "PILOT" ? "SPRINT" : plan.id)}
                   onUpgrade={handleUpgrade}
                 />
               </CardContent>
@@ -297,7 +297,7 @@ function PlanAction({
   plan: PricingPlan;
   isCurrentPlan: boolean;
   loading: boolean;
-  onUpgrade: (planId: "GROWTH" | "FAMILY") => void;
+  onUpgrade: (planId: "SPRINT" | "GROWTH" | "FAMILY") => void;
 }) {
   if (plan.href) {
     return (
@@ -328,7 +328,11 @@ function PlanAction({
     );
   }
 
-  const paidPlanId = plan.id === "GROWTH" || plan.id === "FAMILY" ? plan.id : null;
+  const paidPlanId = plan.id === "PILOT"
+    ? "SPRINT"
+    : plan.id === "GROWTH" || plan.id === "FAMILY"
+      ? plan.id
+      : null;
 
   if (!paidPlanId) {
     return null;
@@ -336,7 +340,11 @@ function PlanAction({
 
   return (
     <Button
-      className={paidPlanId === "GROWTH" ? "w-full bg-indigo-600 hover:bg-indigo-700" : "w-full"}
+      className={paidPlanId === "SPRINT"
+        ? "w-full bg-emerald-700 hover:bg-emerald-800"
+        : paidPlanId === "GROWTH"
+          ? "w-full bg-indigo-600 hover:bg-indigo-700"
+          : "w-full"}
       disabled={loading}
       onClick={() => onUpgrade(paidPlanId)}
     >

@@ -55,8 +55,6 @@ npx cdk deploy --app "npx tsx infra/app.ts" -c deploymentMode=production
 ```
 
 ```
-CloudFront (CDN)
-    ↓
 Application Load Balancer
     ↓
 ECS Fargate (Next.js container)
@@ -154,16 +152,14 @@ aws ecs create-service \
 
 ### 6. Database Migration
 
-After RDS is running, apply schema changes before updating ECS to an image that uses them. The CI workflow generates the Prisma client but does not modify RDS.
+After RDS is running, apply schema changes before updating ECS to an image that uses them. The CI workflow generates the Prisma client but does not modify RDS. For an existing database, follow `prisma/manual-migrations/README.md`: snapshot the database, restore a disposable clone, and rehearse the ordered additive SQL and rollback before touching the pilot database.
 
 ```bash
-# From local machine or a bastion host
-DATABASE_URL="postgresql://mathpath:<PASSWORD>@<RDS_ENDPOINT>:5432/mathpath_tutor" \
-  npx prisma db push
+# For a new disposable database only
+DATABASE_URL="postgresql://mathpath:<PASSWORD>@<RDS_ENDPOINT>:5432/mathpath_tutor" npx prisma db push
 
-# Seed initial data
-DATABASE_URL="postgresql://mathpath:<PASSWORD>@<RDS_ENDPOINT>:5432/mathpath_tutor" \
-  npm run db:seed
+# Seed a new database after schema creation
+DATABASE_URL="postgresql://mathpath:<PASSWORD>@<RDS_ENDPOINT>:5432/mathpath_tutor" npm run db:seed
 ```
 
 ## CI/CD Pipeline
@@ -210,13 +206,16 @@ npm run dev
 | `JWT_SECRET` | Secrets Manager | JWT signing key |
 | `AI_PROVIDER` | Task Definition | "bedrock" |
 | `AI_MODEL` | Task Definition | Bedrock model ID |
+| `AI_INPUT_COST_PER_MILLION_USD` | Task Definition | Explicit provider input-token rate for cost attribution |
+| `AI_OUTPUT_COST_PER_MILLION_USD` | Task Definition | Explicit provider output-token rate for cost attribution |
+| `LEARNING_PATH_EXPERIMENT_ENABLED` | Task Definition | Keep `false` until the pilot explicitly approves the experiment |
 | `AWS_REGION` | Task Definition | AWS region |
 | `NEXT_PUBLIC_DEMO_MODE` | Task Definition | "false" in production |
 | `NEXT_PUBLIC_APP_URL` | Task Definition | Public URL |
 
 ## Scaling
 
-- **Horizontal**: ECS auto-scaling based on CPU/memory
+- **Horizontal**: ECS auto-scaling based on CPU
 - **Database**: RDS read replicas for read-heavy queries
 - **AI**: Bedrock handles scaling automatically
 - **CDN**: CloudFront for static assets and caching
@@ -225,7 +224,7 @@ npm run dev
 
 - CloudWatch Logs for application logs
 - CloudWatch Metrics for ECS task health
-- RDS Performance Insights for database
+- RDS metrics and automated backups
 - Health check endpoint: `GET /api/health`
 
 ## Cost Estimate (small scale)

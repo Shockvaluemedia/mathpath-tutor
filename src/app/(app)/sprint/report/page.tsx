@@ -21,7 +21,6 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/providers/auth-provider";
 import { ParentFeedbackCard } from "@/components/pilot/parent-feedback-card";
 import type { SprintReport } from "@/lib/sprint";
-import { getSprintActivationSummary, trackSprintEvent } from "@/lib/sprint-tracking";
 
 export default function SprintReportPage() {
   const { currentStudent, apiRequest, isLoading } = useAuth();
@@ -37,7 +36,6 @@ export default function SprintReportPage() {
     try {
       const data = await apiRequest(`/api/sprint/report?studentId=${encodeURIComponent(studentId)}`);
       setReport(data.report);
-      trackSprintEvent("sprint_report_viewed", studentId);
     } catch (err) {
       console.error("Sprint report load failed:", err);
       setError("Could not load the sprint report yet.");
@@ -80,8 +78,13 @@ export default function SprintReportPage() {
     );
   }
 
-  const activation = getSprintActivationSummary(report.studentId);
+  const activation = report.activationChecklist;
   const sessionProgress = Math.round((report.sessionsCompleted / report.targetSessions) * 100);
+  const confidenceValue = report.confidenceStart !== null && report.confidenceCurrent !== null
+    ? `${report.confidenceStart} to ${report.confidenceCurrent}`
+    : report.confidenceStart !== null
+      ? `${report.confidenceStart} baseline`
+      : "Pending";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -89,6 +92,12 @@ export default function SprintReportPage() {
         <div>
           <Badge className="mb-3 bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
             {report.sprintName}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={report.evidenceStatus === "demo" ? "ml-2 border-amber-300 bg-amber-50 text-amber-800" : "ml-2"}
+          >
+            {report.evidenceLabel}
           </Badge>
           <h1 className="text-3xl font-bold text-gray-950">
             {report.studentName}&apos;s Sprint Proof Report
@@ -109,11 +118,17 @@ export default function SprintReportPage() {
         </div>
       </div>
 
+      {report.evidenceStatus === "demo" && (
+        <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Sample data only. This report does not represent a customer or learner outcome.
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<ClipboardList className="h-5 w-5 text-emerald-700" />} label="Sessions" value={`${report.sessionsCompleted}/${report.targetSessions}`} />
-        <MetricCard icon={<BookOpen className="h-5 w-5 text-sky-600" />} label="Practice Time" value={`${report.minutesCompleted} min`} />
+        <MetricCard icon={<BookOpen className="h-5 w-5 text-sky-600" />} label="Recorded Time" value={`${report.minutesCompleted} min`} />
         <MetricCard icon={<Target className="h-5 w-5 text-amber-600" />} label="Activation" value={`${report.activationRate}%`} />
-        <MetricCard icon={<LineChart className="h-5 w-5 text-rose-600" />} label="Confidence" value={`${report.confidenceStart} to ${report.confidenceCurrent}`} />
+        <MetricCard icon={<LineChart className="h-5 w-5 text-rose-600" />} label="Confidence" value={confidenceValue} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -125,24 +140,40 @@ export default function SprintReportPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {report.skillDeltas.map((skill) => (
-              <div key={skill.name}>
-                <div className="mb-2 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-950">{skill.name}</p>
-                    <p className="text-xs text-gray-500">{skill.domain}</p>
+            {report.skillDeltas.length > 0 ? (
+              report.skillDeltas.map((skill) => (
+                <div key={skill.skillId}>
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-950">{skill.name}</p>
+                      <p className="text-xs text-gray-500">{skill.domain}</p>
+                    </div>
+                    <p className="text-right text-sm font-semibold text-emerald-700">
+                      {skill.baseline === null
+                        ? "Baseline pending"
+                        : skill.current === null
+                          ? `${skill.baseline}% baseline`
+                          : `${skill.baseline}% to ${skill.current}%`}
+                    </p>
                   </div>
-                  <p className="text-sm font-semibold text-emerald-700">
-                    {skill.baseline}% to {skill.current}%
+                  {skill.baseline !== null && (
+                    <div className="space-y-2">
+                      <Progress value={skill.baseline} className="h-2 opacity-50" />
+                      {skill.current !== null && <Progress value={skill.current} className="h-2" />}
+                    </div>
+                  )}
+                  <p className="mt-2 text-xs text-gray-500">
+                    {skill.current === null
+                      ? "Endline check pending"
+                      : `${skill.baselineQuestionCount} baseline and ${skill.endlineQuestionCount} endline questions`}
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Progress value={skill.baseline} className="h-2 opacity-50" />
-                  <Progress value={skill.current} className="h-2" />
-                </div>
-                <p className="mt-2 text-xs text-gray-500">Sprint target: {skill.target}%</p>
+              ))
+            ) : (
+              <div className="rounded-md border border-dashed p-5 text-sm text-gray-600">
+                Complete the diagnostic to capture the first measured skill baseline.
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -232,11 +263,25 @@ export default function SprintReportPage() {
               </ul>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <Link href="/learn">
-                <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
-                  Continue Lesson
-                </Button>
-              </Link>
+              {report.evidenceStatus === "demo" ? (
+                <Link href="/billing/plans">
+                  <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
+                    View $49 Sprint
+                  </Button>
+                </Link>
+              ) : report.canStartEndline ? (
+                <Link href="/diagnostic?phase=endline">
+                  <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
+                    Run Endline Check
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/learn">
+                  <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
+                    Continue Lesson
+                  </Button>
+                </Link>
+              )}
               <Link href="/tutor">
                 <Button variant="outline" className="w-full">
                   Ask Tutor
@@ -247,9 +292,11 @@ export default function SprintReportPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-6">
-        <ParentFeedbackCard studentId={report.studentId} studentName={report.studentName} />
-      </div>
+      {(report.evidenceStatus === "measured" || report.evidenceStatus === "demo") && (
+        <div className="mt-6">
+          <ParentFeedbackCard studentId={report.studentId} studentName={report.studentName} />
+        </div>
+      )}
     </div>
   );
 }

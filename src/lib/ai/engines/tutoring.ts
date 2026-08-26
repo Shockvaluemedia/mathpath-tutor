@@ -40,7 +40,11 @@ export const tutoringEngine = {
 
     messages.push({ role: "user", content: message });
 
-    const response = await chatCompletion({ messages, temperature: 0.8 });
+    const response = await chatCompletion({
+      messages,
+      temperature: 0.8,
+      observability: { operationType: "LEGACY_DOMAIN_TUTOR_CHAT", learnerId: context.learner.id, metadata: { domain: context.domain.slug } },
+    });
 
     // Detect emotional signals
     const frustrationSignals = [
@@ -73,7 +77,7 @@ function buildSystemPrompt(context: TutoringContext): string {
 2. If the learner is stuck, provide a hint, not the answer.
 3. If frustration is detected, acknowledge feelings, slow down, simplify.
 4. Celebrate effort and progress, not just correct answers.
-5. Use age-appropriate language for a ${learner.age}-year-old.
+5. Use language appropriate to the ${learner.developmentalStage} developmental stage without sounding childish.
 6. Break explanations into small steps.
 7. Help them understand WHY without shame.
 8. Detect missing prerequisites and address them.
@@ -93,8 +97,7 @@ ${sessionTypePrompt}
 ${baseRules}
 
 Learner context:
-- Name: ${learner.name}
-- Age: ${learner.age}, Grade: ${learner.grade}
+- Developmental stage: ${learner.developmentalStage}, Grade: ${learner.grade}
 - Confidence: ${learner.confidenceLevel}/10
 - Learning style: ${learner.preferredStyle}
 - Current focus: ${context.skillsBeingPracticed.join(", ") || "general"}

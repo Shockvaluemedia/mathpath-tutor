@@ -2,6 +2,8 @@ export type SprintEventName =
   | "sprint_landing_viewed"
   | "diagnostic_started"
   | "diagnostic_completed"
+  | "endline_started"
+  | "endline_completed"
   | "first_lesson_started"
   | "lesson_completed"
   | "sprint_report_viewed"

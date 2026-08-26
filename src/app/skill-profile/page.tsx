@@ -206,13 +206,13 @@ export default function SkillProfilePage() {
 
         {/* CTA */}
         <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button size="lg" onClick={() => router.push("/learn")}>
-            Start First Lesson
+          <Button size="lg" onClick={() => router.push("/billing/plans")}>
+            Review 2-Week Sprint
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
           <Button size="lg" variant="outline" onClick={() => router.push("/sprint/report")}>
             <Rocket className="h-4 w-4 mr-2" />
-            View Sprint Plan
+            View Baseline Report
           </Button>
         </div>
       </div>

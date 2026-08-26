@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +25,12 @@ interface ReviewItem {
 }
 
 interface ReviewQuestion {
+  id: string;
   skillId: string;
   skillName: string;
   question: string;
   hints: string[];
-  answer: string;
-  explanation: string;
+  difficulty: number;
 }
 
 export default function ReviewPage() {
@@ -43,14 +43,13 @@ export default function ReviewPage() {
   const [mode, setMode] = useState<"overview" | "reviewing" | "complete">("overview");
   const [answer, setAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [feedback, setFeedback] = useState<{ correct: boolean; correctAnswer?: string; explanation: string } | null>(null);
   const [results, setResults] = useState<{ correct: boolean; question: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const questionStartedAt = useRef(0);
 
-  useEffect(() => {
-    loadReview();
-  }, [currentStudent]);
-
-  const loadReview = async () => {
+  const loadReview = useCallback(async () => {
     if (!currentStudent) return;
     try {
       const data = await apiRequest(`/api/students/${currentStudent.id}/review`);
@@ -61,23 +60,48 @@ export default function ReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest, currentStudent]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadReview, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadReview]);
 
   const startReview = () => {
     setMode("reviewing");
     setCurrentQ(0);
     setAnswer("");
     setShowResult(false);
+    setFeedback(null);
     setResults([]);
+    questionStartedAt.current = Date.now();
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
+    if (!currentStudent || submitting) return;
     const q = questions[currentQ];
-    const isCorrect = answer.trim().toLowerCase() === q.answer.trim().toLowerCase();
-    setResults((prev) => [...prev, { correct: isCorrect, question: q.question }]);
-    setShowResult(true);
-    if (isCorrect) {
-      awardXP(10, "Review correct!");
+    setSubmitting(true);
+    try {
+      const result = await apiRequest(`/api/students/${currentStudent.id}/review`, {
+        method: "POST",
+        body: JSON.stringify({
+          questionId: q.id,
+          answer: answer.trim(),
+          attemptId: crypto.randomUUID(),
+          hintsUsed: 0,
+          responseTimeMs: Date.now() - questionStartedAt.current,
+        }),
+      });
+      setFeedback({
+        correct: result.correct,
+        correctAnswer: result.correctAnswer,
+        explanation: result.explanation,
+      });
+      setResults((prev) => [...prev, { correct: result.correct, question: q.question }]);
+      setShowResult(true);
+      if (result.correct) awardXP(10, "Review correct!");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -86,9 +110,11 @@ export default function ReviewPage() {
       setCurrentQ((prev) => prev + 1);
       setAnswer("");
       setShowResult(false);
+      setFeedback(null);
+      questionStartedAt.current = Date.now();
     } else {
       setMode("complete");
-      const correctCount = results.filter((r) => r.correct).length + (answer.trim().toLowerCase() === questions[currentQ]?.answer.trim().toLowerCase() ? 1 : 0);
+      const correctCount = results.filter((r) => r.correct).length;
       if (correctCount === questions.length) {
         awardXP(25, "Perfect review!");
       }
@@ -178,11 +204,11 @@ export default function ReviewPage() {
 
             {showResult && (
               <div className={`p-4 rounded-lg ${
-                answer.trim().toLowerCase() === q.answer.trim().toLowerCase()
+                feedback?.correct
                   ? "bg-emerald-50 border border-emerald-200"
                   : "bg-red-50 border border-red-200"
               }`}>
-                {answer.trim().toLowerCase() === q.answer.trim().toLowerCase() ? (
+                {feedback?.correct ? (
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-800">Correct!</span>
@@ -193,17 +219,19 @@ export default function ReviewPage() {
                       <AlertTriangle className="h-5 w-5 text-red-500" />
                       <span className="font-medium text-red-800">Not quite</span>
                     </div>
-                    <p className="text-sm text-red-700">Answer: {q.answer}</p>
+                    {feedback?.correctAnswer && (
+                      <p className="text-sm text-red-700">Answer: {feedback.correctAnswer}</p>
+                    )}
                   </div>
                 )}
-                <p className="text-sm text-gray-600 mt-2">{q.explanation}</p>
+                <p className="text-sm text-gray-600 mt-2">{feedback?.explanation}</p>
               </div>
             )}
 
             <div className="flex justify-between pt-2">
               {!showResult ? (
-                <Button onClick={checkAnswer} disabled={!answer.trim()}>
-                  Check Answer
+                <Button onClick={checkAnswer} disabled={!answer.trim() || submitting}>
+                  {submitting ? "Checking..." : "Check Answer"}
                 </Button>
               ) : (
                 <Button onClick={nextQuestion}>

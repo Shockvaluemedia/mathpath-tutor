@@ -2,6 +2,14 @@ import Stripe from "stripe";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
+export const SPRINT_OFFER = {
+  id: "sprint",
+  name: "Math Recovery Sprint",
+  price: 4900,
+  currency: "usd",
+  stripePrice: process.env.STRIPE_PRICE_SPRINT || "price_sprint",
+} as const;
+
 export const PLANS = {
   FREE: {
     id: "free",

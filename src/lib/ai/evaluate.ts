@@ -3,12 +3,12 @@ import { AssessmentResponseData, EvaluationResult } from "../types";
 
 export async function evaluateResponse(
   responseData: AssessmentResponseData,
-  studentAge: number,
+  _studentAge: number,
   gradeBand: string
 ): Promise<EvaluationResult> {
   const prompt = `Evaluate this student's math response:
 
-Student info: Age ${studentAge}, Grade Band: ${gradeBand}
+Learner context: Grade Band ${gradeBand}
 
 Question: ${responseData.question}
 Student's Answer: ${responseData.learnerAnswer}
@@ -34,6 +34,7 @@ Analyze the response and return a JSON object with:
     ],
     jsonMode: true,
     temperature: 0.3,
+    observability: { operationType: "RESPONSE_EVALUATION" },
   });
 
   return JSON.parse(content) as EvaluationResult;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { useXP } from "@/components/ui/xp-notification";
 import { Confetti } from "@/components/ui/confetti";
 import { BookOpen, Brain, Dumbbell, Rocket, MessageCircle, Sparkles, CheckCircle, PartyPopper, History } from "lucide-react";
 import { trackSprintEvent } from "@/lib/sprint-tracking";
+import { areMathAnswersEquivalent } from "@/lib/math/validators";
 
 interface LessonSection {
   title: string;
@@ -31,6 +32,29 @@ interface Lesson {
   reflection: LessonSection;
 }
 
+interface LessonAnswer {
+  questionId: string;
+  sectionKey: string;
+  questionIndex: number;
+  learnerAnswer: string;
+  isCorrect: boolean;
+  hintsUsed: number;
+  responseTimeMs: number;
+}
+
+interface DailyPlanItem {
+  type: string;
+  skillId: string | null;
+  skillName: string;
+  estimatedMinutes: number;
+  learnerExplanation: string;
+}
+
+interface DailyPlan {
+  items: DailyPlanItem[];
+  estimatedMinutes: number;
+}
+
 export default function LearnPage() {
   const router = useRouter();
   const { currentStudent, apiRequest } = useAuth();
@@ -41,7 +65,23 @@ export default function LearnPage() {
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [sectionAnswers, setSectionAnswers] = useState<Record<string, { answer: string; isCorrect: boolean }[]>>({});
+  const [sectionAnswers, setSectionAnswers] = useState<Record<string, LessonAnswer[]>>({});
+  const [dailyPlan, setDailyPlan] = useState<DailyPlan | null>(null);
+
+  const loadDailyPlan = useCallback(async () => {
+    if (!currentStudent) return;
+    try {
+      const data = await apiRequest(`/api/students/${currentStudent.id}/daily-path`);
+      setDailyPlan(data.plan);
+    } catch {
+      setDailyPlan(null);
+    }
+  }, [apiRequest, currentStudent]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadDailyPlan, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadDailyPlan]);
 
   const sections = lesson
     ? [
@@ -93,7 +133,14 @@ export default function LearnPage() {
         body: JSON.stringify({
           lessonId,
           studentId: currentStudent?.id,
-          responses: allResponses,
+          responses: allResponses.map((response) => ({
+            questionId: response.questionId,
+            sectionKey: response.sectionKey,
+            questionIndex: response.questionIndex,
+            learnerAnswer: response.learnerAnswer,
+            hintsUsed: response.hintsUsed,
+            responseTimeMs: response.responseTimeMs,
+          })),
         }),
       });
 
@@ -113,15 +160,28 @@ export default function LearnPage() {
     }
   };
 
-  const recordAnswer = (sectionKey: string, questionIndex: number, answer: string, correctAnswer: string) => {
-    const isCorrect = answer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+  const recordAnswer = (
+    sectionKey: string,
+    questionIndex: number,
+    answer: string,
+    correctAnswer: string,
+    telemetry: { hintsUsed: number; responseTimeMs: number }
+  ) => {
+    const isCorrect = areMathAnswersEquivalent(answer, correctAnswer).equivalent;
     if (isCorrect) {
       awardXP(10, "Correct answer!");
     }
     setSectionAnswers((prev) => {
       const sectionData = prev[sectionKey] || [];
       const updated = [...sectionData];
-      updated[questionIndex] = { answer, isCorrect };
+      updated[questionIndex] = {
+        questionId: `${sectionKey}:${questionIndex}`,
+        sectionKey,
+        questionIndex,
+        learnerAnswer: answer,
+        isCorrect,
+        ...telemetry,
+      };
       return { ...prev, [sectionKey]: updated };
     });
   };
@@ -162,6 +222,32 @@ export default function LearnPage() {
             Hi {currentStudent?.name || "there"}! Ready for today&apos;s math adventure?
           </p>
         </div>
+
+        {dailyPlan && dailyPlan.items.length > 0 && (
+          <section className="mb-8 border-y border-gray-200 py-5 text-left">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-semibold text-gray-950">Today&apos;s path</h2>
+                <p className="text-sm text-gray-500">About {dailyPlan.estimatedMinutes} minutes</p>
+              </div>
+              <Badge variant="outline">{dailyPlan.items.length} steps</Badge>
+            </div>
+            <div className="space-y-4">
+              {dailyPlan.items.map((item, index) => (
+                <div key={`${item.type}:${item.skillId ?? index}`} className="grid grid-cols-[2rem_1fr_auto] items-start gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-950">{item.skillName}</p>
+                    <p className="mt-1 text-sm leading-5 text-gray-600">{item.learnerExplanation}</p>
+                  </div>
+                  <span className="pt-1 text-xs text-gray-500">{item.estimatedMinutes} min</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <Card className="text-center">
           <CardContent className="py-8 sm:py-12">
@@ -248,10 +334,16 @@ export default function LearnPage() {
               <h4 className="font-medium text-gray-900">Practice Questions</h4>
               {current.data.questions.map((q, i) => (
                 <QuestionCard
-                  key={i}
+                  key={`${current.key}:${i}`}
                   question={q}
                   index={i}
-                  onAnswer={(answer) => recordAnswer(current.key, i, answer, q.answer)}
+                  onAnswer={(answer, telemetry) => recordAnswer(
+                    current.key,
+                    i,
+                    answer,
+                    q.answer,
+                    telemetry
+                  )}
                 />
               ))}
             </div>
@@ -290,19 +382,28 @@ function QuestionCard({
 }: {
   question: { question: string; hints: string[]; answer: string; explanation: string };
   index: number;
-  onAnswer: (answer: string) => void;
+  onAnswer: (answer: string, telemetry: { hintsUsed: number; responseTimeMs: number }) => void;
 }) {
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [userAnswer, setUserAnswer] = useState("");
   const [checked, setChecked] = useState(false);
+  const startedAtRef = useRef<number | null>(null);
 
-  const isCorrect = userAnswer.trim().toLowerCase() === question.answer.trim().toLowerCase();
+  const isCorrect = areMathAnswersEquivalent(userAnswer, question.answer).equivalent;
 
   const handleCheck = () => {
+    const checkedAt = Date.now();
     setChecked(true);
     setShowAnswer(true);
-    onAnswer(userAnswer);
+    onAnswer(userAnswer, {
+      hintsUsed: showHint ? 1 : 0,
+      responseTimeMs: checkedAt - (startedAtRef.current ?? checkedAt),
+    });
+  };
+
+  const markStarted = () => {
+    if (startedAtRef.current === null) startedAtRef.current = Date.now();
   };
 
   return (
@@ -314,6 +415,7 @@ function QuestionCard({
         type="text"
         placeholder="Your answer..."
         value={userAnswer}
+        onFocus={markStarted}
         onChange={(e) => setUserAnswer(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && !checked && handleCheck()}
         disabled={checked}
@@ -325,7 +427,10 @@ function QuestionCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowHint(!showHint)}
+              onClick={() => {
+                markStarted();
+                setShowHint(!showHint);
+              }}
             >
               💡 Hint
             </Button>

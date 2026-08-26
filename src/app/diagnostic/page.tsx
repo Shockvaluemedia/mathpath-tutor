@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -18,9 +18,18 @@ interface Question {
   question: string;
   difficulty: number;
   hints: string[];
-  correctAnswer: string;
   answerType: string;
   options?: string[];
+}
+
+interface DiagnosticDecision {
+  action: "ASK" | "STOP";
+  direction?: "START" | "UP" | "DOWN" | "LATERAL";
+  stopDecision: {
+    shouldStop: boolean;
+    questionCount: number;
+    estimatedProgress: number;
+  };
 }
 
 function getNow() {
@@ -28,8 +37,19 @@ function getNow() {
 }
 
 export default function DiagnosticPage() {
+  return (
+    <Suspense fallback={<DiagnosticLoading />}>
+      <DiagnosticExperience />
+    </Suspense>
+  );
+}
+
+function DiagnosticExperience() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currentStudent, apiRequest, isLoading } = useAuth();
+  const currentStudentId = currentStudent?.id;
+  const phase = searchParams.get("phase") === "endline" ? "endline" : "baseline";
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
@@ -39,41 +59,61 @@ export default function DiagnosticPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [diagnosticDecision, setDiagnosticDecision] = useState<DiagnosticDecision | null>(null);
   const [responses, setResponses] = useState<Array<{ skillId: string; isCorrect: boolean; difficulty: number }>>([]);
   const startTimeRef = useRef<number>(0);
   const diagnosticStartedRef = useRef(false);
+  const initialLoadStartedRef = useRef(false);
+  const assessmentIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (isLoading) return;
-    if (!currentStudent) {
-      router.push("/onboarding");
-      return;
+  const finalizeAssessment = useCallback(async (id: string | null = assessmentIdRef.current) => {
+    if (!id) throw new Error("Assessment ID is not available");
+    setCompletionError(null);
+    try {
+      await apiRequest("/api/diagnostic/complete", {
+        method: "POST",
+        body: JSON.stringify({ assessmentId: id, studentId: currentStudentId, phase }),
+      });
+      trackSprintEvent(phase === "endline" ? "endline_completed" : "diagnostic_completed", currentStudentId);
+      setCompleted(true);
+      setTimeout(() => router.push(phase === "endline" ? "/sprint/report" : "/skill-profile"), 2000);
+    } catch (err) {
+      console.error("Complete error:", err);
+      setCompletionError("Your answers are saved, but the evidence could not be finalized yet.");
+      throw err;
     }
-    loadQuestions();
-  }, [isLoading, currentStudent]);
+  }, [apiRequest, currentStudentId, phase, router]);
 
-  useEffect(() => {
-    startTimeRef.current = getNow();
-  }, [currentIndex]);
-
-  const loadQuestions = async (previousResponses = responses) => {
+  const loadQuestions = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiRequest("/api/diagnostic/generate", {
         method: "POST",
         body: JSON.stringify({
-          studentId: currentStudent?.id,
-          previousResponses: previousResponses.length > 0 ? previousResponses : undefined,
+          studentId: currentStudentId,
+          assessmentId: assessmentIdRef.current ?? undefined,
+          phase,
         }),
       });
 
+      setDiagnosticDecision(data.diagnosticDecision ?? null);
+      if (data.assessmentId) {
+        assessmentIdRef.current = data.assessmentId;
+        setAssessmentId(data.assessmentId);
+      }
+      if (data.diagnosticDecision?.stopDecision?.shouldStop) {
+        await finalizeAssessment(data.assessmentId);
+        setQuestions([]);
+        return;
+      }
       setQuestions(data.questions);
-      if (data.assessmentId) setAssessmentId(data.assessmentId);
       if (!diagnosticStartedRef.current) {
-        trackSprintEvent("diagnostic_started", currentStudent?.id);
+        trackSprintEvent(phase === "endline" ? "endline_started" : "diagnostic_started", currentStudentId);
         diagnosticStartedRef.current = true;
       }
       setCurrentIndex(0);
+      startTimeRef.current = getNow();
       setAnswer("");
       setHintsShown(0);
       setConfidence(5);
@@ -82,7 +122,22 @@ export default function DiagnosticPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest, currentStudentId, finalizeAssessment, phase]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!currentStudent) {
+      router.push("/onboarding");
+      return;
+    }
+    if (initialLoadStartedRef.current) return;
+    initialLoadStartedRef.current = true;
+    void loadQuestions();
+  }, [isLoading, currentStudent, loadQuestions, router]);
+
+  useEffect(() => {
+    startTimeRef.current = getNow();
+  }, [currentIndex]);
 
   const handleSubmitAnswer = async () => {
     if (!answer.trim()) return;
@@ -97,37 +152,40 @@ export default function DiagnosticPage() {
         skillId: currentQ.skillId,
         question: currentQ.question,
         studentAnswer: answer,
-        correctAnswer: currentQ.correctAnswer,
-        isCorrect: answer.trim().toLowerCase() === currentQ.correctAnswer.trim().toLowerCase(),
         timeSpent,
         hintsUsed: hintsShown,
         confidenceRating: confidence,
       };
 
-      await apiRequest("/api/diagnostic/submit", {
+      const submission = await apiRequest("/api/diagnostic/submit", {
         method: "POST",
         body: JSON.stringify({
           assessmentId,
-          studentId: currentStudent?.id,
+          studentId: currentStudentId,
           responses: [responseData],
         }),
       });
+      const evaluation = submission.evaluations?.[0];
+      if (!evaluation || typeof evaluation.isCorrect !== "boolean") {
+        throw new Error("Diagnostic response was not scored");
+      }
 
       const newResponses = [
         ...responses,
-        { skillId: currentQ.skillId, isCorrect: responseData.isCorrect, difficulty: currentQ.difficulty },
+        { skillId: currentQ.skillId, isCorrect: evaluation.isCorrect, difficulty: currentQ.difficulty },
       ];
       setResponses(newResponses);
 
-      if (currentIndex < questions.length - 1) {
+      const isDemoAssessment = assessmentId?.startsWith("demo-assessment-") ?? false;
+      if (isDemoAssessment && currentIndex >= questions.length - 1) {
+        await finalizeAssessment(assessmentId);
+      } else if (currentIndex < questions.length - 1) {
         setCurrentIndex((prev) => prev + 1);
         setAnswer("");
         setHintsShown(0);
         setConfidence(5);
-      } else if (newResponses.length < targetQuestionCount) {
-        await loadQuestions(newResponses);
       } else {
-        await completeAssessment();
+        await loadQuestions();
       }
     } catch (err) {
       console.error("Submit error:", err);
@@ -136,21 +194,14 @@ export default function DiagnosticPage() {
     }
   };
 
-  const completeAssessment = async () => {
+  const retryCompletion = async () => {
+    setSubmitting(true);
     try {
-      await apiRequest("/api/diagnostic/complete", {
-        method: "POST",
-        body: JSON.stringify({ assessmentId, studentId: currentStudent?.id }),
-      });
-      trackSprintEvent("diagnostic_completed", currentStudent?.id);
-      setCompleted(true);
-      setTimeout(() => router.push("/skill-profile"), 2000);
-    } catch (err) {
-      console.error("Complete error:", err);
-      // Still navigate even if profile generation fails
-      trackSprintEvent("diagnostic_completed", currentStudent?.id);
-      setCompleted(true);
-      setTimeout(() => router.push("/skill-profile"), 2000);
+      await finalizeAssessment(assessmentId);
+    } catch {
+      // The completion message remains visible for another retry.
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -159,7 +210,9 @@ export default function DiagnosticPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">Preparing your diagnostic assessment...</p>
+          <p className="text-gray-600">
+            {phase === "endline" ? "Preparing the endline skill check..." : "Preparing your diagnostic assessment..."}
+          </p>
         </div>
       </div>
     );
@@ -171,8 +224,14 @@ export default function DiagnosticPage() {
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
             <div className="text-4xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Assessment Complete!</h2>
-            <p className="text-gray-600">Great job! We&apos;re building your personalized skill profile...</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {phase === "endline" ? "Endline Check Complete" : "Assessment Complete!"}
+            </h2>
+            <p className="text-gray-600">
+              {phase === "endline"
+                ? "Your measured sprint report is being prepared."
+                : "Great job! We're building your personalized skill profile..."}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -183,10 +242,11 @@ export default function DiagnosticPage() {
   if (!currentQuestion) return null;
 
   const isDemoAssessment = assessmentId?.startsWith("demo-assessment-") ?? false;
-  const targetQuestionCount = isDemoAssessment ? questions.length : 15;
-  const questionNumber = Math.min(responses.length + 1, targetQuestionCount);
-  const totalProgress = (responses.length / targetQuestionCount) * 100;
-  const totalQuestionLabel = isDemoAssessment ? targetQuestionCount : "~15";
+  const serverQuestionCount = diagnosticDecision?.stopDecision.questionCount ?? 0;
+  const questionNumber = Math.max(responses.length, serverQuestionCount) + 1;
+  const totalProgress = isDemoAssessment
+    ? (responses.length / questions.length) * 100
+    : (diagnosticDecision?.stopDecision.estimatedProgress ?? 0) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white py-8 px-4">
@@ -195,7 +255,7 @@ export default function DiagnosticPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">
-              Question {questionNumber} of {totalQuestionLabel}
+              Question {questionNumber}
             </span>
             <Badge variant="outline">{currentQuestion.skillName}</Badge>
           </div>
@@ -275,6 +335,12 @@ export default function DiagnosticPage() {
           </CardContent>
         </Card>
 
+        {completionError && (
+          <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {completionError} Please retry before leaving this check.
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-between">
           <Button
@@ -287,11 +353,29 @@ export default function DiagnosticPage() {
             {hintsShown >= currentQuestion.hints.length ? "No more hints" : "Get a hint"}
           </Button>
 
-          <Button onClick={handleSubmitAnswer} disabled={!answer.trim() || submitting}>
-            {submitting ? "Checking..." : "Submit Answer"}
+          <Button
+            onClick={completionError ? retryCompletion : handleSubmitAnswer}
+            disabled={completionError ? submitting : !answer.trim() || submitting}
+          >
+            {submitting
+              ? "Checking..."
+              : completionError
+                ? "Retry Completion"
+                : "Submit Answer"}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DiagnosticLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-white">
+      <div className="text-center">
+        <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-gray-600">Preparing the skill check...</p>
       </div>
     </div>
   );

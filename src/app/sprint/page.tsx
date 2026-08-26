@@ -73,7 +73,7 @@ export default function SprintLandingPage() {
           <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-14">
             <div className="flex flex-col justify-center">
               <Badge className="mb-5 w-fit bg-amber-100 text-amber-800 hover:bg-amber-100">
-                Pilot MVP for math recovery
+                $49 founding-family pilot
               </Badge>
               <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-normal text-gray-950 sm:text-5xl">
                 Math Recovery Sprint
@@ -84,7 +84,7 @@ export default function SprintLandingPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/signup">
                   <Button size="lg" className="w-full bg-emerald-700 hover:bg-emerald-800 sm:w-auto">
-                    Start Diagnostic
+                    Start Free Diagnostic
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -99,10 +99,10 @@ export default function SprintLandingPage() {
             <div className="rounded-lg border bg-stone-50 p-5">
               <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Sprint proof preview</p>
+                  <p className="text-sm font-medium text-gray-500">Sample sprint proof preview</p>
                   <h2 className="text-xl font-semibold text-gray-950">Alex, Grade 5</h2>
                 </div>
-                <Badge variant="outline">Day 8 of 14</Badge>
+                <Badge variant="outline">Sample data</Badge>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {pilotMetrics.map((metric) => (
@@ -175,7 +175,7 @@ export default function SprintLandingPage() {
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/signup">
               <Button className="w-full bg-emerald-700 hover:bg-emerald-800 sm:w-auto">
-                Start Sprint
+                Start Free Diagnostic
               </Button>
             </Link>
             <Link href="/">

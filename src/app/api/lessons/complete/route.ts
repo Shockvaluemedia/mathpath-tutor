@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import {
+  getActiveSprintEnrollment,
+  recordSprintEvent,
+} from "@/lib/sprint-events";
+import { buildLessonEvidence, verifyLessonResponses } from "@/lib/learning/evidence";
+import { recordLearningEvidenceBatchAndUpdateMastery } from "@/lib/learning/mastery";
+import { evaluateInterventionsAfterEvidence } from "@/lib/learning/interventions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +24,7 @@ export async function POST(request: NextRequest) {
         success: true,
         completedAt: new Date().toISOString(),
         skillName: "Fractions",
+        evidence: { mode: "demo", persisted: false },
       });
     }
 
@@ -31,60 +39,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
 
-    const responseList = Array.isArray(responses) ? responses : [];
+    const responseList = Array.isArray(responses) ? responses.slice(0, 100) : [];
     const completedAt = new Date();
-    const accuracy = responseList.length > 0
-      ? responseList.filter((response: { isCorrect?: boolean }) => response.isCorrect).length / responseList.length
+    const verifiedResponses = verifyLessonResponses(lesson.content, responseList);
+    const evidence = buildLessonEvidence(
+      studentId,
+      lesson.skillId,
+      lesson.id,
+      verifiedResponses,
+      completedAt
+    );
+    const gradedEvidence = evidence.filter((record) => record.outcome !== "UNGRADED");
+    const accuracy = gradedEvidence.length > 0
+      ? gradedEvidence.filter((record) => record.outcome === "CORRECT").length / gradedEvidence.length
       : null;
+
+    const masteryResult = await recordLearningEvidenceBatchAndUpdateMastery(evidence);
 
     await prisma.learningModule.update({
       where: { id: lesson.id },
       data: {
         completedAt,
-        score: accuracy === null ? undefined : accuracy * 100,
+        score: accuracy === null ? null : accuracy * 100,
       },
     });
 
-    if (accuracy !== null) {
-      const masteryGain = accuracy * 15;
-      const existingMastery = await prisma.learnerSkillMastery.findUnique({
-        where: {
-          learnerId_skillId: { learnerId: studentId, skillId: lesson.skillId },
-        },
-      });
-      const status = accuracy >= 0.8
-        ? "MASTERED"
-        : accuracy >= 0.5
-          ? "PRACTICING"
-          : "DEVELOPING";
-
-      await prisma.learnerSkillMastery.upsert({
-        where: {
-          learnerId_skillId: { learnerId: studentId, skillId: lesson.skillId },
-        },
-        update: {
-          masteryScore: Math.min((existingMastery?.masteryScore ?? 0) + masteryGain, 100),
-          confidenceScore: Math.min((existingMastery?.confidenceScore ?? 0) + accuracy * 10, 100),
-          status,
-          attempts: { increment: 1 },
-          lastPracticed: new Date(),
-        },
-        create: {
-          learnerId: studentId,
+    const enrollment = await getActiveSprintEnrollment(studentId);
+    if (enrollment) {
+      await recordSprintEvent({
+        enrollmentId: enrollment.id,
+        name: "lesson_completed",
+        idempotencyKey: `${enrollment.id}:lesson_completed:${lesson.id}`,
+        metadata: {
+          lessonId: lesson.id,
           skillId: lesson.skillId,
-          masteryScore: masteryGain,
-          confidenceScore: accuracy * 10,
-          status,
-          attempts: 1,
-          lastPracticed: new Date(),
+          score: accuracy === null ? null : Math.round(accuracy * 100),
         },
       });
+    }
+    if (masteryResult.insertedEvidenceCount > 0) {
+      await evaluateInterventionsAfterEvidence({ learnerId: studentId, sourceType: "lesson", sourceId: lesson.id });
     }
 
     return NextResponse.json({
       success: true,
       completedAt,
       skillName: lesson.skill.name,
+      evidence: {
+        inserted: masteryResult.insertedEvidenceCount,
+        graded: gradedEvidence.length,
+        ungraded: evidence.length - gradedEvidence.length,
+      },
+      mastery: masteryResult.projections[0]?.state ?? null,
     });
   } catch (error) {
     console.error("Complete lesson error:", error);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { recordSprintEvent } from "@/lib/sprint-events";
 
 // Stripe webhook handler
 // Configure webhook endpoint in Stripe dashboard pointing to /api/billing/webhook
@@ -32,9 +33,45 @@ export async function POST(request: NextRequest) {
         const session = event.data.object;
         const userId = session.metadata?.userId;
         const planId = session.metadata?.planId;
+        const sprintEnrollmentId = session.metadata?.sprintEnrollmentId;
         const stripeCustomerId = typeof session.customer === "string"
           ? session.customer
           : session.customer?.id;
+
+        if (userId && stripeCustomerId) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { stripeCustomerId },
+          });
+        }
+
+        if (planId === "sprint" && sprintEnrollmentId && session.payment_status === "paid") {
+          await prisma.sprintEnrollment.update({
+            where: { id: sprintEnrollmentId },
+            data: {
+              priceCents: session.amount_total ?? 4900,
+              currency: session.currency ?? "usd",
+              stripeCheckoutSessionId: session.id,
+              paidAt: new Date(),
+            },
+          });
+          await recordSprintEvent({
+            enrollmentId: sprintEnrollmentId,
+            name: "payment_completed",
+            idempotencyKey: `${sprintEnrollmentId}:payment_completed:${session.id}`,
+            metadata: {
+              checkoutSessionId: session.id,
+              amountTotal: session.amount_total,
+              currency: session.currency,
+            },
+          });
+          console.log(`Sprint payment completed: enrollment=${sprintEnrollmentId}`);
+          break;
+        }
+
+        if (planId === "sprint") {
+          break;
+        }
 
         if (userId && planId) {
           // Update user's subscription in database
@@ -43,9 +80,6 @@ export async function POST(request: NextRequest) {
             data: {
               planId,
               ...(stripeCustomerId && { stripeCustomerId }),
-              // In production, add subscription fields to the User model:
-              // subscriptionId: session.subscription,
-              // subscriptionStatus: "active",
             },
           });
           console.log(`Subscription activated: user=${userId} plan=${planId}`);
