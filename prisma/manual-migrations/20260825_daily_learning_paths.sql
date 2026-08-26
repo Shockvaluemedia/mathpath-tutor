@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "daily_learning_paths" (
   "inputs" JSONB NOT NULL,
   "model_version" TEXT NOT NULL DEFAULT 'daily-path-v1',
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "daily_learning_paths_pkey" PRIMARY KEY ("id")
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "daily_learning_paths_learner_id_date_key_key" ON "daily_learning_paths"("learner_id", "date_key");

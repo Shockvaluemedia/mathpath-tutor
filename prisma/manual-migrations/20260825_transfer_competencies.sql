@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS "thinking_competencies" (
   "metadata" JSONB NOT NULL DEFAULT '{}',
   "is_active" BOOLEAN NOT NULL DEFAULT true,
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "thinking_competencies_pkey" PRIMARY KEY ("id")
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "thinking_competencies_code_key" ON "thinking_competencies"("code");
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "learner_thinking_competencies" (
   "model_version" TEXT NOT NULL DEFAULT 'thinking-v1',
   "last_evidence_at" TIMESTAMP(3),
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "learner_thinking_competencies_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "learner_thinking_competencies_probability_valid" CHECK ("probability" BETWEEN 0 AND 1),
   CONSTRAINT "learner_thinking_competencies_uncertainty_valid" CHECK ("uncertainty" BETWEEN 0 AND 1)
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "thinking_competency_evidence" (
   CONSTRAINT "thinking_competency_evidence_weight_valid" CHECK ("weight" BETWEEN 0.2 AND 1.5)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "thinking_competency_evidence_idempotency_key_key" ON "thinking_competency_evidence"("idempotency_key");
-CREATE INDEX IF NOT EXISTS "thinking_competency_evidence_learner_id_competency_id_occurred_at_idx" ON "thinking_competency_evidence"("learner_id", "competency_id", "occurred_at");
+CREATE INDEX IF NOT EXISTS "thinking_competency_evidence_learner_id_competency_id_occur_idx" ON "thinking_competency_evidence"("learner_id", "competency_id", "occurred_at");
 CREATE INDEX IF NOT EXISTS "thinking_competency_evidence_source_type_source_id_idx" ON "thinking_competency_evidence"("source_type", "source_id");
 
 DO $$ BEGIN

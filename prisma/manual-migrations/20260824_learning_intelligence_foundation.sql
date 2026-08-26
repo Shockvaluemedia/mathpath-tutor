@@ -101,7 +101,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "learner_misconceptions_learner_id_misconcepti
   ON "learner_misconceptions"("learner_id", "misconception_id");
 CREATE INDEX IF NOT EXISTS "learner_misconceptions_learner_id_status_probability_idx"
   ON "learner_misconceptions"("learner_id", "status", "probability");
-CREATE INDEX IF NOT EXISTS "learner_misconception_evidence_learner_misconception_id_observed_at_idx"
+CREATE INDEX IF NOT EXISTS "learner_misconception_evidence_learner_misconception_id_obs_idx"
   ON "learner_misconception_evidence"("learner_misconception_id", "observed_at");
 CREATE INDEX IF NOT EXISTS "learner_misconception_evidence_source_type_source_id_idx"
   ON "learner_misconception_evidence"("source_type", "source_id");
