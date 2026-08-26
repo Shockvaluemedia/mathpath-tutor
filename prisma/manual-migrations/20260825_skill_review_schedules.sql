@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "skill_review_schedules" (
   "reason_codes" JSONB NOT NULL DEFAULT '[]',
   "schedule_version" TEXT NOT NULL DEFAULT 'math-retention-v1',
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "skill_review_schedules_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "skill_review_schedules_interval_positive" CHECK ("interval_days" >= 1),
   CONSTRAINT "skill_review_schedules_ease_valid" CHECK ("ease_factor" BETWEEN 1 AND 3),

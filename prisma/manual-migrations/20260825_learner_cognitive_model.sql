@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS "learner_patterns" (
   "last_observed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "resolved_at" TIMESTAMP(3),
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "learner_patterns_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "learner_patterns_valid_confidence" CHECK ("confidence" BETWEEN 0 AND 1)
 );
@@ -49,17 +49,17 @@ CREATE TABLE IF NOT EXISTS "instructional_strategy_performance" (
   "first_used_at" TIMESTAMP(3) NOT NULL,
   "last_used_at" TIMESTAMP(3) NOT NULL,
   "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "instructional_strategy_performance_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "instructional_strategy_nonnegative_attempts" CHECK ("attempts" >= 0 AND "successful_attempts" >= 0),
   CONSTRAINT "instructional_strategy_valid_outcome" CHECK ("average_outcome_score" BETWEEN 0 AND 1)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "instructional_strategy_performance_learner_strategy_scope_key_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "instructional_strategy_performance_learner_id_strategy_scop_key"
   ON "instructional_strategy_performance"("learner_id", "strategy", "scope_key");
-CREATE INDEX IF NOT EXISTS "instructional_strategy_performance_learner_outcome_idx"
+CREATE INDEX IF NOT EXISTS "instructional_strategy_performance_learner_id_average_outco_idx"
   ON "instructional_strategy_performance"("learner_id", "average_outcome_score");
-CREATE INDEX IF NOT EXISTS "instructional_strategy_performance_skill_strategy_idx"
+CREATE INDEX IF NOT EXISTS "instructional_strategy_performance_skill_id_strategy_idx"
   ON "instructional_strategy_performance"("skill_id", "strategy");
 
 DO $$ BEGIN
