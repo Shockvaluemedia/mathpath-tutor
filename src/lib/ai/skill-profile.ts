@@ -22,8 +22,6 @@ export async function generateSkillProfile(
   const prompt = `Analyze this student's diagnostic assessment results and generate a comprehensive skill profile.
 
 Student:
-- Name: ${studentProfile.name}
-- Age: ${studentProfile.age}
 - Grade: ${studentProfile.grade}
 - Grade Band: ${studentProfile.gradeBand}
 - Self-reported confidence: ${studentProfile.confidenceLevel}/10
@@ -64,6 +62,7 @@ but WHY they struggle. Return valid JSON only.`,
     ],
     jsonMode: true,
     temperature: 0.4,
+    observability: { operationType: "SKILL_PROFILE", learnerId: studentProfile.id },
   });
 
   return JSON.parse(content) as SkillProfile;

@@ -90,6 +90,42 @@ export const DEMO_PROGRESS = {
       { id: "l3", title: "Word Problem Basics", skillName: "Word Problems", completed: true, date: new Date(Date.now() - 172800000).toISOString() },
       { id: "l4", title: "Introduction to Division", skillName: "Division", completed: false, date: new Date(Date.now() - 259200000).toISOString() },
     ],
+    intelligence: {
+      sample: true,
+      currentTarget: "Add fractions with unlike denominators",
+      currentLearningLevel: "Grade 5; developing fraction reasoning with visual support",
+      targetState: "Developing with support",
+      blocker: {
+        skill: "Fraction equivalence",
+        explanation: "Alex can name fractions, but equivalent forms are not stable enough yet for unlike denominators.",
+        masteryProbability: 0.42,
+      },
+      hypothesis: {
+        name: "Adds numerators and denominators separately",
+        status: "LIKELY",
+        probability: 0.68,
+        evidenceCount: 2,
+      },
+      adaptation: {
+        from: "Symbolic explanation",
+        to: "Visual fraction models",
+        reason: "Visual comparisons produced a successful assisted response after symbolic attempts did not.",
+      },
+      evidence: {
+        assistedSuccesses: 2,
+        independentSuccesses: 0,
+        retention: "Not tested yet",
+        transfer: "Not tested yet",
+      },
+      masteryTrajectory: "Verified accuracy moved from 33% to 60% across the last five fraction observations.",
+      confidenceTrajectory: "Reported confidence moved from 40% to 60% while visual models were used.",
+      interventionStatus: "Confidence recovery is active for independent fraction work.",
+      recommendedHumanActions: [
+        "Ask Alex to explain why two visual fractions are equivalent before naming a rule.",
+        "Praise the reasoning step, then offer one short independent fraction check.",
+      ],
+      nextStep: "Check fraction equivalence visually, then ask for one independent unlike-denominator solution.",
+    },
     latestReport: {
       id: "r1",
       studentId: "demo-student-1",
@@ -144,9 +180,94 @@ export const DEMO_PROGRESS = {
       { id: "l6", title: "Understanding Negative Numbers", skillName: "Integers", completed: true, date: new Date(Date.now() - 86400000).toISOString() },
       { id: "l7", title: "Introduction to Variables", skillName: "Pre-Algebra", completed: false, date: new Date(Date.now() - 172800000).toISOString() },
     ],
+    intelligence: {
+      sample: true,
+      currentTarget: "Solve two-step equations independently",
+      currentLearningLevel: "Grade 7; equation concepts are secure while signed-number fluency develops",
+      targetState: "Concept understood; fluency developing",
+      blocker: {
+        skill: "Integer operations fluency",
+        explanation: "Maya chooses valid equation steps but slows down and loses accuracy when signs change.",
+        masteryProbability: 0.58,
+      },
+      hypothesis: {
+        name: "Negative sign and subtraction may be getting mixed",
+        status: "SUSPECTED",
+        probability: 0.38,
+        evidenceCount: 1,
+      },
+      adaptation: {
+        from: "Repeated symbolic practice",
+        to: "Worked example, then guided practice",
+        reason: "A worked example reduced hesitation while keeping the reasoning age-respectful and explicit.",
+      },
+      evidence: {
+        assistedSuccesses: 1,
+        independentSuccesses: 3,
+        retention: "Review due in 3 days",
+        transfer: "Emerging in word problems",
+      },
+      masteryTrajectory: "Verified accuracy moved from 50% to 75% across eight recent equation observations.",
+      confidenceTrajectory: "Reported confidence remains below verified performance, suggesting cautious self-rating.",
+      interventionStatus: "No active intervention; monitor signed-arithmetic hesitation.",
+      recommendedHumanActions: [
+        "Give Maya extra processing time before offering a hint.",
+        "Use one age-respectful worked example when sign changes cause hesitation.",
+      ],
+      nextStep: "Build signed-arithmetic fluency, then return to a new two-step equation without hints.",
+    },
     latestReport: null,
   },
 };
+
+export const DEMO_COGNITIVE_MODELS = {
+  "demo-student-1": {
+    sample: true,
+    modelVersion: "cognitive-v1",
+    updatedAt: new Date().toISOString(),
+    summary: {
+      modelVersion: "cognitive-v1",
+      evidenceCount: 14,
+      activePatternCount: 4,
+      highConfidencePatternCount: 2,
+      strategyCount: 2,
+      topPatternTypes: ["HINT_DEPENDENCY", "REPRESENTATION_EFFECTIVENESS", "RECURRING_MISCONCEPTION", "PERSISTENCE_STRENGTH"],
+    },
+    patterns: [
+      { patternType: "HINT_DEPENDENCY", scopeKey: "fractions", statement: "Fraction performance currently depends on hints more than independent work.", confidence: 0.78, status: "ACTIVE", evidence: { sampleSize: 6, assistedAttemptRate: 0.67, independentSuccessRate: 0.33, reasonCode: "ASSISTANCE_EXCEEDS_INDEPENDENT_SUCCESS" } },
+      { patternType: "REPRESENTATION_EFFECTIVENESS", scopeKey: "visual-model", statement: "Visual fraction models are associated with successful verified responses.", confidence: 0.74, status: "ACTIVE", evidence: { sampleSize: 4, successRate: 0.75, reasonCode: "REPRESENTATION_VERIFIED_SUCCESS_RATE" } },
+      { patternType: "RECURRING_MISCONCEPTION", scopeKey: "FRACTION_COMPONENT_ADDITION", statement: "Adding fraction components separately remains a recurring misconception hypothesis.", confidence: 0.68, status: "ACTIVE", evidence: { sampleSize: 3, probability: 0.68, reasonCode: "ACTIVE_MISCONCEPTION_HYPOTHESIS" } },
+      { patternType: "PERSISTENCE_STRENGTH", scopeKey: "global", statement: "Alex often recovers with a correct response after an error.", confidence: 0.66, status: "ACTIVE", evidence: { sampleSize: 6, recoveryRate: 0.67, reasonCode: "POST_FAILURE_RECOVERY" } },
+    ],
+    strategyPerformance: [
+      { strategy: "GUIDED_PRACTICE", scopeKey: "GUIDED_PRACTICE:fractions", attempts: 4, successfulAttempts: 3, averageOutcomeScore: 0.75, averageMasteryGain: null, averageConfidenceGain: null, averageTimeToSuccessMs: 72000, skill: { name: "Fractions", slug: "fractions" } },
+      { strategy: "INDEPENDENT_PRACTICE", scopeKey: "INDEPENDENT_PRACTICE:fractions", attempts: 3, successfulAttempts: 1, averageOutcomeScore: 0.33, averageMasteryGain: null, averageConfidenceGain: null, averageTimeToSuccessMs: 88000, skill: { name: "Fractions", slug: "fractions" } },
+    ],
+  },
+  "demo-student-2": {
+    sample: true,
+    modelVersion: "cognitive-v1",
+    updatedAt: new Date().toISOString(),
+    summary: {
+      modelVersion: "cognitive-v1",
+      evidenceCount: 18,
+      activePatternCount: 4,
+      highConfidencePatternCount: 2,
+      strategyCount: 2,
+      topPatternTypes: ["DELIBERATE_PACE", "CONFIDENCE_CALIBRATION", "RECENT_BREAKTHROUGH", "FRUSTRATION_PATTERN"],
+    },
+    patterns: [
+      { patternType: "DELIBERATE_PACE", scopeKey: "global", statement: "Maya is accurate when given additional processing time.", confidence: 0.81, status: "ACTIVE", evidence: { sampleSize: 8, averagePaceRatio: 1.48, accuracy: 0.75, reasonCode: "SLOW_RELATIVE_LATENCY_WITH_ACCURACY" } },
+      { patternType: "CONFIDENCE_CALIBRATION", scopeKey: "global", statement: "Reported confidence underestimates verified performance.", confidence: 0.76, status: "ACTIVE", evidence: { sampleSize: 8, accuracy: 0.75, reportedConfidence: 0.39, calibrationGap: -0.36, reasonCode: "VERIFIED_CONFIDENCE_OUTCOME_COMPARISON" } },
+      { patternType: "RECENT_BREAKTHROUGH", scopeKey: "one-step-equations", statement: "Recent verified performance shows a meaningful breakthrough on one-step equations.", confidence: 0.69, status: "ACTIVE", evidence: { sampleSize: 6, previousSuccessRate: 0.33, recentSuccessRate: 0.67, reasonCode: "ROLLING_SUCCESS_RATE_INCREASE" } },
+      { patternType: "FRUSTRATION_PATTERN", scopeKey: "global", statement: "Frustration recurs when signed arithmetic is repeated without a worked example.", confidence: 0.64, status: "ACTIVE", evidence: { sessionCount: 5, frustratedSessionCount: 2, reasonCode: "RECURRING_SESSION_FRUSTRATION" } },
+    ],
+    strategyPerformance: [
+      { strategy: "WORKED_EXAMPLE", scopeKey: "WORKED_EXAMPLE:one-step-equations", attempts: 4, successfulAttempts: 3, averageOutcomeScore: 0.75, averageMasteryGain: null, averageConfidenceGain: null, averageTimeToSuccessMs: 94000, skill: { name: "One-Step Equations", slug: "one-step-equations" } },
+      { strategy: "CHALLENGE", scopeKey: "CHALLENGE:integer-operations", attempts: 3, successfulAttempts: 1, averageOutcomeScore: 0.33, averageMasteryGain: null, averageConfidenceGain: null, averageTimeToSuccessMs: 110000, skill: { name: "Integer Operations", slug: "integer-operations" } },
+    ],
+  },
+} as const;
 
 export const DEMO_DIAGNOSTIC_QUESTIONS = {
   ELEMENTARY: [

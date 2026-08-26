@@ -137,6 +137,7 @@ export class MathPathStack extends cdk.Stack {
         passwordLength: 32,
       },
     });
+    dbCredentials.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
     const database = new rds.DatabaseInstance(this, "Database", {
       engine: rds.DatabaseInstanceEngine.postgres({
@@ -151,9 +152,11 @@ export class MathPathStack extends cdk.Stack {
       allocatedStorage: 20,
       maxAllocatedStorage: 50,
       backupRetention: cdk.Duration.days(7),
-      deletionProtection: false, // Set to true for production
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // Change for production
-      publiclyAccessible: true, // For initial setup; restrict later
+      deleteAutomatedBackups: false,
+      deletionProtection: true,
+      removalPolicy: cdk.RemovalPolicy.SNAPSHOT,
+      publiclyAccessible: false,
+      storageEncrypted: true,
     });
 
     // ─── JWT Secret ────────────────────────────────────────
@@ -164,6 +167,7 @@ export class MathPathStack extends cdk.Stack {
         passwordLength: 64,
       },
     });
+    jwtSecret.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
     // ─── ECR Repository (already exists) ─────────────────
     const repository = ecr.Repository.fromRepositoryName(this, "AppRepo", "mathpath-tutor");
@@ -197,6 +201,8 @@ export class MathPathStack extends cdk.Stack {
       cpu: 512,
       memoryLimitMiB: 1024,
       desiredCount: 1,
+      circuitBreaker: { rollback: true },
+      minHealthyPercent: 100,
       taskImageOptions: {
         image: ecs.ContainerImage.fromEcrRepository(repository, "latest"),
         containerPort: 3000,
@@ -223,7 +229,7 @@ export class MathPathStack extends cdk.Stack {
           logGroup: new logs.LogGroup(this, "AppLogs", {
             logGroupName: "/ecs/mathpath-tutor",
             retention: logs.RetentionDays.TWO_WEEKS,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
           }),
         }),
       },

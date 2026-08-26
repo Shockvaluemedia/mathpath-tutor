@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_STUDENTS } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import {
+  buildSkillMeasurements,
+  isSprintEvidencePhase,
+} from "@/lib/sprint-evidence";
+import {
+  getOrCreateActiveSprintEnrollment,
+  recordSprintEvent,
+} from "@/lib/sprint-events";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { assessmentId, studentId } = body;
+    const requestedPhase = isSprintEvidencePhase(body.phase) ? body.phase : "baseline";
 
     if (!assessmentId || !studentId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -36,7 +45,7 @@ export async function POST(request: NextRequest) {
         ],
         recommendedStartingPoint: "Begin with visual fraction models to build number sense",
       };
-      return NextResponse.json({ skillProfile });
+      return NextResponse.json({ skillProfile, phase: requestedPhase });
     }
 
     // Production
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const assessment = await prisma.assessment.findFirst({
       where: { id: assessmentId, learnerId: studentId },
-      select: { id: true },
+      select: { id: true, assessmentType: true, metadata: true },
     });
     if (!assessment) {
       return NextResponse.json({ error: "Assessment not found" }, { status: 404 });
@@ -56,8 +65,35 @@ export async function POST(request: NextRequest) {
 
     const responses = await prisma.assessmentResponse.findMany({
       where: { assessmentId },
-      include: { skill: true },
+      include: { skill: { include: { domain: true } } },
     });
+    const metadata = assessment.metadata && typeof assessment.metadata === "object"
+      ? assessment.metadata as Record<string, unknown>
+      : {};
+    const expectedQuestionCount = typeof metadata.expectedQuestionCount === "number"
+      ? metadata.expectedQuestionCount
+      : null;
+    const scoredResponses = metadata.scoringAuthority === "SERVER_ANSWER_KEY"
+      ? responses.filter((response) => response.verificationMethod === "SERVER_ANSWER_KEY")
+      : responses;
+
+    if (expectedQuestionCount !== null && scoredResponses.length < expectedQuestionCount) {
+      return NextResponse.json(
+        {
+          error: `Complete all ${expectedQuestionCount} assessment questions before finalizing evidence`,
+        },
+        { status: 409 }
+      );
+    }
+    if (
+      metadata.adaptiveModelVersion === "adaptive-diagnostic-v1" &&
+      metadata.diagnosticStatus !== "READY_TO_COMPLETE"
+    ) {
+      return NextResponse.json(
+        { error: "The adaptive diagnostic still needs more evidence" },
+        { status: 409 }
+      );
+    }
 
     // Generate skill profile with AI
     let skillProfile;
@@ -70,11 +106,11 @@ export async function POST(request: NextRequest) {
         grade: learner.grade,
         gradeBand: learner.developmentalStage,
         confidenceLevel: learner.profile?.confidenceLevel || 5,
-        learningPreferences: learner.profile?.preferences as any || {},
+        learningPreferences: learner.profile?.preferences || {},
       };
 
       const assessmentData = {
-        responses: responses.map((r) => ({
+        responses: scoredResponses.map((r) => ({
           skillId: r.skillId,
           skillName: r.skill.name,
           isCorrect: r.isCorrect,
@@ -83,8 +119,8 @@ export async function POST(request: NextRequest) {
           confidenceRating: r.confidenceRating,
           mistakeType: r.mistakeType,
         })),
-        totalTime: responses.reduce((sum, r) => sum + r.timeSpent, 0),
-        averageConfidence: responses.length > 0 ? responses.reduce((sum, r) => sum + r.confidenceRating, 0) / responses.length : 5,
+        totalTime: scoredResponses.reduce((sum, r) => sum + r.timeSpent, 0),
+        averageConfidence: scoredResponses.length > 0 ? scoredResponses.reduce((sum, r) => sum + r.confidenceRating, 0) / scoredResponses.length : 5,
       };
 
       skillProfile = await generateSkillProfile(studentProfile, assessmentData);
@@ -111,7 +147,62 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ skillProfile });
+    const phase = isSprintEvidencePhase(metadata.sprintPhase)
+      ? metadata.sprintPhase
+      : assessment.assessmentType === "sprint-endline"
+        ? "endline"
+        : "baseline";
+    const enrollmentId = typeof metadata.sprintEnrollmentId === "string"
+      ? metadata.sprintEnrollmentId
+      : (await getOrCreateActiveSprintEnrollment(studentId)).id;
+    const measurements = buildSkillMeasurements(scoredResponses);
+
+    if (measurements.length > 0) {
+      await prisma.sprintSkillSnapshot.createMany({
+        data: measurements.map((measurement) => ({
+          enrollmentId,
+          assessmentId,
+          phase,
+          skillId: measurement.skillId,
+          skillName: measurement.name,
+          domain: measurement.domain,
+          correctCount: measurement.correctCount,
+          questionCount: measurement.questionCount,
+          score: measurement.score,
+          confidence: measurement.confidence,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    await recordSprintEvent({
+      enrollmentId,
+      name: phase === "endline" ? "endline_completed" : "diagnostic_completed",
+      idempotencyKey: `${enrollmentId}:${phase}_completed:${assessmentId}`,
+      metadata: {
+        assessmentId,
+        measuredSkills: measurements.length,
+      },
+    });
+
+    if (phase === "endline") {
+      await prisma.sprintEnrollment.update({
+        where: { id: enrollmentId },
+        data: {
+          status: "completed",
+          completedAt: new Date(),
+        },
+      });
+    }
+
+    return NextResponse.json({
+      skillProfile,
+      phase,
+      evidence: {
+        enrollmentId,
+        measuredSkills: measurements.length,
+      },
+    });
   } catch (error) {
     console.error("Complete diagnostic error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

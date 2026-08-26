@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
     weekStart.setDate(now.getDate() - 7);
 
     const progressData = {
+      studentId,
       studentName: student.name,
       age: student.age,
       grade: student.grade,

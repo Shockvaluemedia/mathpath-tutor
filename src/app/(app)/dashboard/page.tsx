@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { StudentStatusCard } from "@/components/dashboard/student-status-card";
 import {
   TrendingUp, TrendingDown, Minus, Clock, BookOpen, Target,
-  Plus, BarChart3, Heart, RefreshCw, Rocket
+  Plus, BarChart3, Heart, RefreshCw, Rocket, Brain, GitBranch, Lightbulb
 } from "lucide-react";
 
 interface StudentProgress {
@@ -47,22 +47,63 @@ interface StudentProgress {
     completed: boolean;
     date: string;
   }[];
-  latestReport: any;
+  intelligence?: {
+    sample: boolean;
+    currentTarget: string;
+    currentLearningLevel?: string;
+    targetState: string;
+    blocker: {
+      skill: string;
+      explanation: string;
+      masteryProbability: number;
+    };
+    hypothesis: {
+      name: string;
+      status: "SUSPECTED" | "LIKELY" | "CONFIRMED" | "RESOLVING" | "RESOLVED";
+      probability: number;
+      evidenceCount: number;
+    } | null;
+    adaptation: {
+      from: string;
+      to: string;
+      reason: string;
+    };
+    evidence: {
+      assistedSuccesses: number;
+      independentSuccesses: number;
+      retention: string;
+      transfer: string;
+    };
+    nextStep: string;
+    masteryTrajectory?: string;
+    confidenceTrajectory?: string;
+    interventionStatus?: string;
+    recommendedHumanActions?: string[];
+  };
+  latestReport: {
+    progressSummary: string;
+    recommendedNextSteps?: string[];
+  } | null;
+}
+
+interface StudentSummary {
+  id: string;
+  name: string;
+  age: number;
+  grade: number;
+  gradeBand?: string;
+  confidenceLevel?: number;
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, apiRequest } = useAuth();
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentSummary[]>([]);
   const [progressData, setProgressData] = useState<Record<string, StudentProgress>>({});
   const [loading, setLoading] = useState(true);
   const [generatingReport, setGeneratingReport] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadStudents();
-  }, []);
-
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     try {
       const data = await apiRequest("/api/students");
       setStudents(data.students || []);
@@ -81,7 +122,12 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadStudents, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadStudents]);
 
   const generateReport = async (studentId: string) => {
     setGeneratingReport(studentId);
@@ -190,7 +236,7 @@ function StudentDashboard({
   onGenerateReport,
   generatingReport,
 }: {
-  student: any;
+  student: StudentSummary;
   progress?: StudentProgress;
   onGenerateReport: () => void;
   generatingReport: boolean;
@@ -266,6 +312,10 @@ function StudentDashboard({
       </div>
 
       <SprintProofCard progress={progress} />
+
+      {progress?.intelligence && (
+        <LearnerIntelligencePanel intelligence={progress.intelligence} />
+      )}
 
       {/* Progress & Skills */}
       <div className="grid md:grid-cols-2 gap-6">
@@ -401,6 +451,150 @@ function StudentDashboard({
         </Card>
       )}
     </div>
+  );
+}
+
+function LearnerIntelligencePanel({
+  intelligence,
+}: {
+  intelligence: NonNullable<StudentProgress["intelligence"]>;
+}) {
+  const hypothesisLabel = intelligence.hypothesis?.status
+    .toLowerCase()
+    .replace("_", " ");
+
+  return (
+    <Card className="border-sky-200 bg-sky-50/30">
+      <CardHeader className="pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Brain className="h-5 w-5 text-sky-700" />
+            What MathPath is learning
+          </CardTitle>
+          {intelligence.sample && (
+            <Badge variant="outline" className="border-sky-200 bg-white text-sky-800">
+              Sample learner intelligence
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="grid gap-5 lg:grid-cols-3">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-950">
+              <Target className="h-4 w-4 text-emerald-600" />
+              Current target
+            </div>
+            <p className="text-sm text-gray-800">{intelligence.currentTarget}</p>
+            {intelligence.currentLearningLevel && (
+              <p className="text-xs text-gray-600">{intelligence.currentLearningLevel}</p>
+            )}
+            <p className="text-xs text-gray-500">{intelligence.targetState}</p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-950">
+              <GitBranch className="h-4 w-4 text-amber-600" />
+              What was getting in the way
+            </div>
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-gray-800">{intelligence.blocker.skill}</span>
+              <span className="font-medium text-amber-700">
+                {Math.round(intelligence.blocker.masteryProbability * 100)}% mastery estimate
+              </span>
+            </div>
+            <p className="text-xs leading-5 text-gray-600">{intelligence.blocker.explanation}</p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-950">
+              <Lightbulb className="h-4 w-4 text-indigo-600" />
+              What changed
+            </div>
+            <p className="text-sm text-gray-800">
+              {intelligence.adaptation.from} to {intelligence.adaptation.to}
+            </p>
+            <p className="text-xs leading-5 text-gray-600">{intelligence.adaptation.reason}</p>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
+          <div className="space-y-3">
+            {intelligence.hypothesis && (
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">Current hypothesis</p>
+                  <p className="mt-1 text-sm text-gray-800">{intelligence.hypothesis.name}</p>
+                </div>
+                <Badge variant="outline" className="capitalize">
+                  {hypothesisLabel} · {Math.round(intelligence.hypothesis.probability * 100)}%
+                </Badge>
+              </div>
+            )}
+            <p className="text-xs text-gray-500">
+              Based on {intelligence.hypothesis?.evidenceCount ?? 0} matching evidence point{intelligence.hypothesis?.evidenceCount === 1 ? "" : "s"}; MathPath will keep checking before treating this as confirmed.
+            </p>
+          </div>
+
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt className="text-xs text-gray-500">With support</dt>
+              <dd className="font-semibold text-gray-900">{intelligence.evidence.assistedSuccesses}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">Independent</dt>
+              <dd className="font-semibold text-gray-900">{intelligence.evidence.independentSuccesses}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">Retention</dt>
+              <dd className="mt-1 text-xs text-gray-700">{intelligence.evidence.retention}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-gray-500">Transfer</dt>
+              <dd className="mt-1 text-xs text-gray-700">{intelligence.evidence.transfer}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="border-l-2 border-sky-500 pl-3">
+          <p className="text-xs font-medium text-sky-900">What comes next</p>
+          <p className="mt-1 text-sm text-gray-700">{intelligence.nextStep}</p>
+        </div>
+
+        {(intelligence.masteryTrajectory || intelligence.confidenceTrajectory || intelligence.interventionStatus) && (
+          <>
+            <Separator />
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Mastery trajectory</p>
+                <p className="mt-1 text-sm text-gray-700">{intelligence.masteryTrajectory}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500">Confidence trajectory</p>
+                <p className="mt-1 text-sm text-gray-700">{intelligence.confidenceTrajectory}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500">Intervention status</p>
+                <p className="mt-1 text-sm text-gray-700">{intelligence.interventionStatus}</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {intelligence.recommendedHumanActions && intelligence.recommendedHumanActions.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-gray-500">Recommended human actions</p>
+            <ul className="mt-2 space-y-1 text-sm text-gray-700">
+              {intelligence.recommendedHumanActions.map((action) => (
+                <li key={action}>• {action}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

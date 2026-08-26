@@ -28,7 +28,7 @@ export const reportEngine = {
 
     const prompt = `Generate a progress report for a ${data.recipientRole}.
 
-Learner: ${data.learnerName}, Age ${data.age}, Grade ${data.grade}
+Learner context: Grade ${data.grade}
 Domain: ${data.domainName}
 Period: ${data.periodStart} to ${data.periodEnd}
 
@@ -58,6 +58,7 @@ Write for a ${data.recipientRole}. Return JSON:
       ],
       jsonMode: true,
       temperature: 0.6,
+      observability: { operationType: "DOMAIN_PROGRESS_REPORT", metadata: { domain: data.domainName, recipientRole: data.recipientRole } },
     });
 
     const parsed = JSON.parse(content);

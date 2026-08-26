@@ -19,7 +19,7 @@ Domain: ${domain.name}
 Content Type: ${contentType}
 
 Learner:
-- Name: ${learner.name}, Age: ${learner.age}, Grade: ${learner.grade}
+- Grade: ${learner.grade}
 - Stage: ${learner.developmentalStage}
 - Learning style: ${learner.preferredStyle}
 - Confidence: ${learner.confidenceLevel}/10
@@ -58,6 +58,7 @@ Make it age-appropriate, engaging, and confidence-building. Adapt to ${learner.p
       ],
       jsonMode: true,
       temperature: 0.7,
+      observability: { operationType: "DOMAIN_MODULE_GENERATION", learnerId: learner.id, metadata: { domain: domain.slug, contentType } },
     });
 
     return JSON.parse(content);

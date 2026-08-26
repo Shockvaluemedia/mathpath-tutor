@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_PROGRESS } from "@/lib/demo-data";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import { buildLearnerIntelligenceSnapshot } from "@/lib/learning/intelligence";
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +11,7 @@ export async function GET(
     const { id: studentId } = await params;
 
     if (DEMO_MODE) {
-      const progress = (DEMO_PROGRESS as any)[studentId];
+      const progress = DEMO_PROGRESS[studentId as keyof typeof DEMO_PROGRESS];
       if (!progress) {
         // Return empty progress for newly created students
         return NextResponse.json({
@@ -62,6 +63,7 @@ export async function GET(
     const olderConfidence = student.assessmentResponses.filter((r) => r.createdAt < weekAgo).slice(0, 10).map((r) => r.confidenceRating);
     const olderAvg = olderConfidence.length > 0 ? olderConfidence.reduce((a, b) => a + b, 0) / olderConfidence.length : avgConfidence;
     const confidenceTrend = avgConfidence > olderAvg + 0.5 ? "improving" : avgConfidence < olderAvg - 0.5 ? "declining" : "stable";
+    const intelligence = await buildLearnerIntelligenceSnapshot(studentId);
 
     return NextResponse.json({
       student: { id: student.id, name: student.name, age: student.age, grade: student.grade, gradeBand: student.gradeBand, confidenceLevel: student.confidenceLevel },
@@ -80,6 +82,7 @@ export async function GET(
         weak: weakSkills.map((sm) => ({ name: sm.skill.name, domain: sm.skill.domain, score: sm.masteryScore })),
       },
       recentLessons: student.lessons.map((l) => ({ id: l.id, title: l.title, skillName: l.focusSkill.name, completed: !!l.completedAt, date: l.createdAt.toISOString() })),
+      intelligence,
       latestReport: student.parentReports[0] || null,
     });
   } catch (error) {

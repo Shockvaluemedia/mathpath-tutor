@@ -19,8 +19,11 @@ export function ParentFeedbackCard({ studentId, studentName }: { studentId: stri
   const { apiRequest } = useAuth();
   const [clarityRating, setClarityRating] = useState(5);
   const [continueIntent, setContinueIntent] = useState<"yes" | "maybe" | "no">("yes");
+  const [priceIntent, setPriceIntent] = useState<"yes" | "maybe" | "no">("maybe");
+  const [referralIntent, setReferralIntent] = useState<"yes" | "maybe" | "no">("maybe");
   const [concern, setConcern] = useState("");
   const [quote, setQuote] = useState("");
+  const [quoteConsent, setQuoteConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +38,11 @@ export function ParentFeedbackCard({ studentId, studentName }: { studentId: stri
           studentId,
           clarityRating,
           continueIntent,
+          priceIntent,
+          referralIntent,
           concern,
           quote,
+          quoteConsent,
         }),
       });
       trackSprintEvent("parent_feedback_submitted", studentId);
@@ -107,6 +113,44 @@ export function ParentFeedbackCard({ studentId, studentName }: { studentId: stri
         </div>
 
         <div>
+          <p className="mb-2 text-sm font-medium text-gray-900">
+            Would a measured 2-week sprint be worth $49 to your family?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {continueOptions.map((option) => (
+              <Button
+                key={option.value}
+                type="button"
+                variant={priceIntent === option.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPriceIntent(option.value as "yes" | "maybe" | "no")}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-sm font-medium text-gray-900">
+            Would you recommend this sprint to another parent?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {continueOptions.map((option) => (
+              <Button
+                key={option.value}
+                type="button"
+                variant={referralIntent === option.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setReferralIntent(option.value as "yes" | "maybe" | "no")}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <p className="mb-2 text-sm font-medium text-gray-900">What math concern brought you here?</p>
           <Textarea
             value={concern}
@@ -124,11 +168,27 @@ export function ParentFeedbackCard({ studentId, studentName }: { studentId: stri
             placeholder="Example: The report made the next step obvious."
             rows={3}
           />
+          <label className="mt-3 flex items-start gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={quoteConsent}
+              onChange={(event) => setQuoteConsent(event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-emerald-700"
+            />
+            <span>MathPath may use this quote without my child&apos;s name in pilot materials.</span>
+          </label>
         </div>
 
+        {quote.trim() && !quoteConsent && (
+          <p className="text-sm text-amber-700">Quote permission is required before this quote can be used.</p>
+        )}
         {error && <p className="text-sm text-rose-600">{error}</p>}
 
-        <Button onClick={submitFeedback} disabled={submitting} className="bg-emerald-700 hover:bg-emerald-800">
+        <Button
+          onClick={submitFeedback}
+          disabled={submitting || Boolean(quote.trim() && !quoteConsent)}
+          className="bg-emerald-700 hover:bg-emerald-800"
+        >
           <Send className="mr-2 h-4 w-4" />
           {submitting ? "Saving..." : "Submit Feedback"}
         </Button>

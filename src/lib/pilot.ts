@@ -1,10 +1,11 @@
 import { DEMO_PROGRESS } from "@/lib/demo-data";
-import { buildSprintReport, SprintReport } from "@/lib/sprint";
+import { buildDemoSprintReport, SprintReport } from "@/lib/sprint";
 
 export type PilotFunnelStep =
   | "invited"
   | "diagnosticStarted"
   | "diagnosticCompleted"
+  | "paid"
   | "firstLesson"
   | "threeSessions"
   | "reportViewed"
@@ -16,6 +17,7 @@ export interface PilotOperatorAction {
   stage:
     | "invite"
     | "diagnostic"
+    | "payment"
     | "first_lesson"
     | "three_sessions"
     | "report"
@@ -34,8 +36,11 @@ export interface PilotFeedback {
   submittedAt: string;
   clarityRating: number;
   continueIntent: "yes" | "maybe" | "no";
+  priceIntent: "yes" | "maybe" | "no";
+  referralIntent: "yes" | "maybe" | "no";
   concern: string;
   quote: string;
+  quoteConsent: boolean;
 }
 
 export interface PilotParticipant {
@@ -44,10 +49,10 @@ export interface PilotParticipant {
   studentName: string;
   grade: number;
   invitedAt: string;
-  status: "invited" | "active" | "needs_nudge" | "proof_ready";
+  status: "candidate" | "invited" | "active" | "needs_nudge" | "proof_ready";
   currentFocus: string;
   sessionsCompleted: number;
-  confidenceDelta: number;
+  confidenceDelta: number | null;
   sprintReport: SprintReport;
   funnel: Record<PilotFunnelStep, boolean>;
   operatorAction: PilotOperatorAction;
@@ -55,17 +60,20 @@ export interface PilotParticipant {
 }
 
 export interface PilotSummary {
+  mode: "demo" | "live";
   generatedAt: string;
   targetFamilies: number;
   overview: {
     invited: number;
     diagnosticStarted: number;
     diagnosticCompleted: number;
+    paid: number;
     firstLesson: number;
     threeSessions: number;
     reportViewed: number;
     feedbackReceived: number;
     continuationYesOrMaybe: number;
+    priceYesOrMaybe: number;
   };
   participants: PilotParticipant[];
   feedback: PilotFeedback[];
@@ -80,8 +88,11 @@ const demoFeedback: PilotFeedback[] = [
     submittedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
     clarityRating: 5,
     continueIntent: "yes",
+    priceIntent: "yes",
+    referralIntent: "yes",
     concern: "Fractions and word problems are where homework turns into a fight.",
     quote: "The report made the gap feel specific instead of scary.",
+    quoteConsent: true,
   },
   {
     id: "feedback-demo-2",
@@ -90,14 +101,17 @@ const demoFeedback: PilotFeedback[] = [
     submittedAt: new Date(Date.now() - 86400000).toISOString(),
     clarityRating: 4,
     continueIntent: "maybe",
+    priceIntent: "maybe",
+    referralIntent: "yes",
     concern: "Algebra confidence dropped this year.",
     quote: "I liked seeing confidence and not just correct answers.",
+    quoteConsent: true,
   },
 ];
 
 function getDemoReport(studentId: string) {
   const progress = (DEMO_PROGRESS as any)[studentId];
-  return buildSprintReport(progress);
+  return buildDemoSprintReport(progress);
 }
 
 export function buildPilotOperatorAction(participant: {
@@ -108,15 +122,25 @@ export function buildPilotOperatorAction(participant: {
   funnel: Record<PilotFunnelStep, boolean>;
   feedback?: PilotFeedback;
 }): PilotOperatorAction {
-  const { familyName, studentName, currentFocus, sessionsCompleted, funnel, feedback } = participant;
+  const { studentName, currentFocus, sessionsCompleted, funnel, feedback } = participant;
 
-  if (!funnel.diagnosticStarted) {
+  if (!funnel.invited) {
     return {
       stage: "invite",
       priority: "high",
       label: "Send diagnostic invite",
       dueLabel: "Today",
       message: `Hi [Name], we are testing a 2-week Math Recovery Sprint for students who need a clearer math plan. The first step is a short diagnostic for ${studentName}. Start here: [Sprint Link]`,
+    };
+  }
+
+  if (!funnel.diagnosticStarted) {
+    return {
+      stage: "diagnostic",
+      priority: "high",
+      label: "Nudge diagnostic start",
+      dueLabel: "Within 24 hours",
+      message: `Hi [Name], the Math Recovery Sprint link is ready for ${studentName}. The first step is a short diagnostic that records the starting skill baseline.`,
     };
   }
 
@@ -127,6 +151,16 @@ export function buildPilotOperatorAction(participant: {
       label: "Help finish diagnostic",
       dueLabel: "Within 24 hours",
       message: `Hi [Name], I saw ${studentName} started the diagnostic. If you can finish it this week, MathPath will turn it into the first recovery focus and a parent-ready report.`,
+    };
+  }
+
+  if (!funnel.paid) {
+    return {
+      stage: "payment",
+      priority: "high",
+      label: "Send founding-family checkout",
+      dueLabel: "After diagnostic",
+      message: `Hi [Name], ${studentName}'s baseline is ready. The $49 founding-family Sprint includes 10 focused sessions, an endline check, and a measured parent report.`,
     };
   }
 
@@ -230,6 +264,7 @@ function buildParticipant({
     invited: true,
     diagnosticStarted: false,
     diagnosticCompleted: false,
+    paid: false,
     firstLesson: false,
     threeSessions: false,
     reportViewed: false,
@@ -237,6 +272,9 @@ function buildParticipant({
     feedbackReceived: Boolean(feedback) || Boolean(funnel.feedbackReceived),
   };
   const sessionsCompleted = report.sessionsCompleted;
+  const confidenceDelta = report.confidenceStart !== null && report.confidenceCurrent !== null
+    ? Math.round((report.confidenceCurrent - report.confidenceStart) * 10) / 10
+    : null;
 
   return {
     id,
@@ -247,7 +285,7 @@ function buildParticipant({
     status,
     currentFocus,
     sessionsCompleted,
-    confidenceDelta: Math.round((report.confidenceCurrent - report.confidenceStart) * 10) / 10,
+    confidenceDelta,
     sprintReport: report,
     funnel: normalizedFunnel,
     operatorAction: buildPilotOperatorAction({
@@ -265,7 +303,7 @@ function buildParticipant({
 export function buildDemoPilotSummary(): PilotSummary {
   const alexReport = getDemoReport("demo-student-1");
   const mayaReport = getDemoReport("demo-student-2");
-  const plannedReport = buildSprintReport({
+  const plannedReport = buildDemoSprintReport({
     student: { id: "pilot-student-3", name: "Jordan", grade: 6, confidenceLevel: 5 },
     stats: {
       lessonsCompletedThisWeek: 0,
@@ -283,7 +321,7 @@ export function buildDemoPilotSummary(): PilotSummary {
     },
     latestReport: null,
   });
-  const nudgeReport = buildSprintReport({
+  const nudgeReport = buildDemoSprintReport({
     student: { id: "pilot-student-4", name: "Riley", grade: 4, confidenceLevel: 4 },
     stats: {
       lessonsCompletedThisWeek: 1,
@@ -315,6 +353,7 @@ export function buildDemoPilotSummary(): PilotSummary {
       funnel: {
         diagnosticStarted: true,
         diagnosticCompleted: true,
+        paid: true,
         firstLesson: true,
         threeSessions: true,
         reportViewed: true,
@@ -332,6 +371,7 @@ export function buildDemoPilotSummary(): PilotSummary {
       funnel: {
         diagnosticStarted: true,
         diagnosticCompleted: true,
+        paid: false,
         firstLesson: true,
         threeSessions: true,
         reportViewed: true,
@@ -348,6 +388,7 @@ export function buildDemoPilotSummary(): PilotSummary {
       funnel: {
         diagnosticStarted: true,
         diagnosticCompleted: true,
+        paid: true,
         firstLesson: true,
       },
     }),
@@ -363,31 +404,39 @@ export function buildDemoPilotSummary(): PilotSummary {
     }),
   ];
 
-  return buildPilotSummary(participants, demoFeedback);
+  return buildPilotSummary(participants, demoFeedback, "demo");
 }
 
-export function buildPilotSummary(participants: PilotParticipant[], feedback: PilotFeedback[]): PilotSummary {
+export function buildPilotSummary(
+  participants: PilotParticipant[],
+  feedback: PilotFeedback[],
+  mode: PilotSummary["mode"] = "live"
+): PilotSummary {
   const overview = participants.reduce<PilotSummary["overview"]>(
     (acc, participant) => {
       acc.invited += participant.funnel.invited ? 1 : 0;
       acc.diagnosticStarted += participant.funnel.diagnosticStarted ? 1 : 0;
       acc.diagnosticCompleted += participant.funnel.diagnosticCompleted ? 1 : 0;
+      acc.paid += participant.funnel.paid ? 1 : 0;
       acc.firstLesson += participant.funnel.firstLesson ? 1 : 0;
       acc.threeSessions += participant.funnel.threeSessions ? 1 : 0;
       acc.reportViewed += participant.funnel.reportViewed ? 1 : 0;
       acc.feedbackReceived += participant.funnel.feedbackReceived ? 1 : 0;
       acc.continuationYesOrMaybe += participant.feedback?.continueIntent === "yes" || participant.feedback?.continueIntent === "maybe" ? 1 : 0;
+      acc.priceYesOrMaybe += participant.feedback?.priceIntent === "yes" || participant.feedback?.priceIntent === "maybe" ? 1 : 0;
       return acc;
     },
     {
       invited: 0,
       diagnosticStarted: 0,
       diagnosticCompleted: 0,
+      paid: 0,
       firstLesson: 0,
       threeSessions: 0,
       reportViewed: 0,
       feedbackReceived: 0,
       continuationYesOrMaybe: 0,
+      priceYesOrMaybe: 0,
     }
   );
 
@@ -396,6 +445,7 @@ export function buildPilotSummary(participants: PilotParticipant[], feedback: Pi
     .map((participant) => `${participant.operatorAction.label} for ${participant.familyName}.`);
 
   return {
+    mode,
     generatedAt: new Date().toISOString(),
     targetFamilies: 5,
     overview,
@@ -412,6 +462,7 @@ function csvCell(value: string | number | boolean | null | undefined) {
 
 export function buildPilotCsv(summary: PilotSummary) {
   const headers = [
+    "evidence_mode",
     "family",
     "student",
     "grade",
@@ -421,6 +472,7 @@ export function buildPilotCsv(summary: PilotSummary) {
     "confidence_delta",
     "diagnostic_started",
     "diagnostic_completed",
+    "paid",
     "first_lesson",
     "three_sessions",
     "report_viewed",
@@ -430,11 +482,16 @@ export function buildPilotCsv(summary: PilotSummary) {
     "message_draft",
     "clarity_rating",
     "continue_intent",
+    "price_intent",
+    "referral_intent",
     "parent_concern",
     "parent_quote",
+    "quote_consent",
+    "report_evidence_status",
   ];
 
   const rows = summary.participants.map((participant) => [
+    summary.mode,
     participant.familyName,
     participant.studentName,
     participant.grade,
@@ -444,6 +501,7 @@ export function buildPilotCsv(summary: PilotSummary) {
     participant.confidenceDelta,
     participant.funnel.diagnosticStarted,
     participant.funnel.diagnosticCompleted,
+    participant.funnel.paid,
     participant.funnel.firstLesson,
     participant.funnel.threeSessions,
     participant.funnel.reportViewed,
@@ -453,8 +511,12 @@ export function buildPilotCsv(summary: PilotSummary) {
     participant.operatorAction.message,
     participant.feedback?.clarityRating,
     participant.feedback?.continueIntent,
+    participant.feedback?.priceIntent,
+    participant.feedback?.referralIntent,
     participant.feedback?.concern,
-    participant.feedback?.quote,
+    participant.feedback?.quoteConsent ? participant.feedback.quote : "",
+    participant.feedback?.quoteConsent,
+    participant.sprintReport.evidenceStatus,
   ]);
 
   return [

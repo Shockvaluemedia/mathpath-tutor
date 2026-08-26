@@ -3,9 +3,21 @@ import { StudentProfile, DiagnosticQuestion, GradeBand } from "../types";
 
 export async function generateDiagnostic(
   studentProfile: StudentProfile,
-  previousResponses?: { skillId: string; isCorrect: boolean; difficulty: number }[]
+  previousResponses?: { skillId: string; isCorrect: boolean; difficulty: number }[],
+  options: {
+    purpose?: "baseline" | "endline";
+    focusSkills?: { skillId: string; skillName: string }[];
+    selection?: {
+      skillId: string;
+      skillName: string;
+      targetDifficulty: number;
+      direction: string;
+      reasonCodes: string[];
+    };
+    questionCount?: number;
+  } = {}
 ): Promise<DiagnosticQuestion[]> {
-  const prompt = buildDiagnosticPrompt(studentProfile, previousResponses);
+  const prompt = buildDiagnosticPrompt(studentProfile, previousResponses, options);
 
   const content = await chatCompletion({
     messages: [
@@ -19,6 +31,7 @@ grade band but also probe for gaps in prerequisite skills. Return valid JSON onl
     ],
     jsonMode: true,
     temperature: 0.7,
+    observability: { operationType: "DIAGNOSTIC_GENERATION", learnerId: studentProfile.id, metadata: { purpose: options.purpose ?? "baseline" } },
   });
 
   const parsed = JSON.parse(content);
@@ -27,13 +40,24 @@ grade band but also probe for gaps in prerequisite skills. Return valid JSON onl
 
 function buildDiagnosticPrompt(
   profile: StudentProfile,
-  previousResponses?: { skillId: string; isCorrect: boolean; difficulty: number }[]
+  previousResponses?: { skillId: string; isCorrect: boolean; difficulty: number }[],
+  options: {
+    purpose?: "baseline" | "endline";
+    focusSkills?: { skillId: string; skillName: string }[];
+    selection?: {
+      skillId: string;
+      skillName: string;
+      targetDifficulty: number;
+      direction: string;
+      reasonCodes: string[];
+    };
+    questionCount?: number;
+  } = {}
 ): string {
   const gradeTopics = getTopicsForGradeBand(profile.gradeBand as GradeBand || "ELEMENTARY");
   
-  let context = `Generate 5 adaptive diagnostic math questions for this student:
-- Name: ${profile.name}
-- Age: ${profile.age}
+  const questionCount = Math.min(5, Math.max(1, options.questionCount ?? 5));
+  let context = `Generate ${questionCount} adaptive diagnostic math question${questionCount === 1 ? "" : "s"} for this student:
 - Grade: ${profile.grade}
 - Grade Band: ${profile.gradeBand}
 - Self-reported confidence: ${profile.confidenceLevel}/10
@@ -41,6 +65,27 @@ function buildDiagnosticPrompt(
 - Topics they find hard: ${profile.learningPreferences.hardTopics.join(", ") || "none specified"}
 
 Topics to assess for this grade band: ${gradeTopics.join(", ")}`;
+
+  if (options.purpose === "endline") {
+    context += `\n\nThis is an endline check. Generate parallel questions that measure the same skills at comparable difficulty without copying prior wording.`;
+    if (options.focusSkills && options.focusSkills.length > 0) {
+      const skillPairs = options.focusSkills
+        .map(({ skillId, skillName }) => `${skillId}: ${skillName}`)
+        .join(", ");
+      context += `\nUse only these baseline skillId/name pairs: ${skillPairs}. Preserve each skillId exactly as written so results can be compared.`;
+    }
+  }
+
+  if (options.selection) {
+    context += `\n\nThe server's adaptive engine selected the next evidence target:
+- Required skillId: ${options.selection.skillId}
+- Required skill name: ${options.selection.skillName}
+- Target difficulty: ${options.selection.targetDifficulty}/5
+- Movement: ${options.selection.direction}
+- Selection reasons: ${options.selection.reasonCodes.join(", ")}
+
+Generate only this skill and preserve the required skillId and skill name exactly. Match the target difficulty. Do not substitute a neighboring topic.`;
+  }
 
   if (previousResponses && previousResponses.length > 0) {
     const correct = previousResponses.filter((r) => r.isCorrect).length;

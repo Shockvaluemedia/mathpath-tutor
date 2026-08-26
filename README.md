@@ -74,10 +74,23 @@ npm run dev
 | `DATABASE_URL` | PostgreSQL connection string |
 | `JWT_SECRET` | Secret key for JWT tokens |
 | `OPENAI_API_KEY` | OpenAI API key |
+| `AI_PROVIDER` | `openai` or `bedrock` |
 | `AI_MODEL` | AI model to use (default: gpt-4o) |
+| `AI_MAX_TOKENS` | Maximum output tokens per AI request |
+| `AI_INPUT_COST_PER_MILLION_USD` | Deployment-specific input-token rate; leave blank to report pricing as unconfigured |
+| `AI_OUTPUT_COST_PER_MILLION_USD` | Deployment-specific output-token rate; leave blank to report pricing as unconfigured |
+| `LEARNING_PATH_EXPERIMENT_ENABLED` | Opt-in stable adaptive-versus-linear assignment; defaults to `false` |
 | `NEXT_PUBLIC_APP_URL` | App URL for client-side |
 
 ## Architecture
+
+### Learner Intelligence Foundation
+
+MathPath now has an additive foundation for typed skill dependencies, evidence-backed misconception hypotheses, and probabilistic mastery. New graph services can inspect direct and recursive prerequisites, evaluate readiness, choose remediation paths, and reject invalid or circular graphs. Known math misconception signatures are detected deterministically and recorded as probabilistic hypotheses rather than treating every wrong answer as a diagnosis.
+
+Lesson and diagnostic responses write to an append-only evidence ledger. Correctness is verified on the server, assisted and independent performance remain distinct, and the compatibility mastery row is recomputed centrally with uncertainty, retention, transfer, fluency, and reason codes. A single success cannot produce mastery, and diagnostic answer keys are not returned to the browser.
+
+The full loop now includes information-seeking diagnostics, a persistent cognitive model, bounded tutor orchestration, strategy tracking, spaced retrieval, deterministic parameterized problems, transfer competencies, explainable daily paths, thresholded interventions, and an internal outcome/cost evaluation layer. The current implementation map and migration risks are documented in [`docs/architecture/learner-intelligence-roadmap.md`](docs/architecture/learner-intelligence-roadmap.md); governing decisions are recorded as ADR-001 through ADR-011 in [`docs/architecture`](docs/architecture).
 
 ### Grade Bands
 
@@ -128,12 +141,18 @@ The app adapts teaching style by developmental stage:
 | `/api/diagnostic/submit` | POST | Submit answers |
 | `/api/diagnostic/complete` | POST | Finalize assessment |
 | `/api/lessons/generate` | POST | Generate daily lesson |
+| `/api/students/:id/daily-path` | GET | Get the explainable adaptive learning path |
+| `/api/students/:id/review` | GET/POST | Serve and score delayed retrieval |
+| `/api/students/:id/transfer` | GET/POST | Serve and score transfer evidence |
+| `/api/students/:id/interventions/evaluate` | GET/POST | Inspect or run thresholded intervention decisions |
+| `/api/learners/:id/cognitive-model` | GET | Read the authorized evidence-derived learner model |
 | `/api/tutor/chat` | POST | Chat with AI tutor |
 | `/api/reports/weekly` | POST | Generate parent report |
+| `/api/admin/learning-system` | GET | Read administrator-only learning, experiment, and AI-cost aggregates |
 
 ### Database Schema
 
-The database includes tables for: users, students, skills, assessments, assessment_responses, student_skill_mastery, lessons, tutor_sessions, and parent_reports.
+The database includes identity and organization records, learners and profiles, relational skill dependencies, misconception hypotheses, assessments, append-only learning evidence, mastery projections, cognitive patterns, review schedules, generated problem instances, transfer competencies, daily paths, tutoring sessions, interventions and outcomes, experiment assignments, AI usage events, and progress reports.
 
 Run `npx prisma studio` to explore the schema visually.
 
@@ -158,14 +177,18 @@ The pilot-ready MVP path is the **2-Week Math Recovery Sprint**:
 4. Tutor supports stuck moments → `/tutor`
 5. Parent reviews the proof report → `/sprint/report`
 
-The sprint report tracks the key pilot activation signals locally during testing:
-diagnostic started, diagnostic completed, first lesson started, lesson completed, and sprint report viewed.
-The report API is available at `/api/sprint/report?studentId=...` and returns demo data when `NEXT_PUBLIC_DEMO_MODE=true`.
+In production, Sprint activation events and assessment snapshots are persisted server-side.
+The first diagnostic creates an immutable per-skill baseline. After session 10, the endline
+check runs from `/diagnostic?phase=endline`; the report only displays before/after movement
+when matching baseline and endline evidence exists. Demo reports remain available when
+`NEXT_PUBLIC_DEMO_MODE=true` and are explicitly labeled as sample data.
 
 The operator pilot control room is available at `/admin/pilot`. It tracks family invite status,
-diagnostic completion, first lesson, three-session activation, report views, parent feedback,
-and exports pilot evidence from `/api/pilot/summary?format=csv`.
+diagnostic completion, the one-time Sprint payment, first lesson, three-session activation,
+report views, parent feedback, and exports pilot evidence from `/api/pilot/summary?format=csv`.
 Use `docs/pilot-tester-script.md` for the first 3-5 tester families.
+
+Before running a production pilot, use `npm run db:push` only for a new disposable database. For an existing pilot database, review and apply the additive files in `prisma/manual-migrations` against a restored snapshot first. Also configure `STRIPE_PRICE_SPRINT` with the one-time $49 Stripe Price ID.
 
 ## Tutor Behavior
 

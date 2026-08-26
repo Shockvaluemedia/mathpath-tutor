@@ -16,8 +16,6 @@ export const assessmentEngine = {
     const prompt = `Generate 5 adaptive diagnostic questions for this learner in the domain of ${domain.name}.
 
 Learner:
-- Name: ${learner.name}
-- Age: ${learner.age}
 - Grade: ${learner.grade}
 - Developmental Stage: ${learner.developmentalStage}
 - Confidence: ${learner.confidenceLevel}/10
@@ -47,6 +45,7 @@ Return a JSON object with a "questions" array. Each question:
       ],
       jsonMode: true,
       temperature: 0.7,
+      observability: { operationType: "DOMAIN_ASSESSMENT_GENERATION", learnerId: learner.id, metadata: { domain: domain.slug } },
     });
 
     return JSON.parse(content).questions;
@@ -57,13 +56,13 @@ Return a JSON object with a "questions" array. Each question:
    */
   async evaluateResponse(
     response: AssessmentResponseData,
-    learnerAge: number,
+    _learnerAge: number,
     stage: string,
     domainName: string
   ): Promise<EvaluationResult> {
     const prompt = `Evaluate this learner's response in ${domainName}:
 
-Learner: Age ${learnerAge}, Stage: ${stage}
+Learner stage: ${stage}
 Question: ${response.question}
 Learner's Answer: ${response.learnerAnswer}
 Correct Answer: ${response.correctAnswer}
@@ -86,6 +85,7 @@ Return JSON:
       ],
       jsonMode: true,
       temperature: 0.3,
+      observability: { operationType: "DOMAIN_RESPONSE_EVALUATION", metadata: { domain: domainName } },
     });
 
     return JSON.parse(content);

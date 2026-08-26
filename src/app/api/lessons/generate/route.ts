@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import {
+  getActiveSprintEnrollment,
+  recordSprintEvent,
+} from "@/lib/sprint-events";
 
 function getDemoLesson(gradeBand: string) {
   const isMiddle = gradeBand === "MIDDLE_SCHOOL" || gradeBand === "MIDDLE";
@@ -141,6 +145,15 @@ export async function POST(request: NextRequest) {
           content: JSON.parse(JSON.stringify(lesson)),
         },
       });
+      const enrollment = await getActiveSprintEnrollment(studentId);
+      if (enrollment) {
+        await recordSprintEvent({
+          enrollmentId: enrollment.id,
+          name: "first_lesson_started",
+          idempotencyKey: `${enrollment.id}:first_lesson_started`,
+          metadata: { lessonId: savedModule.id },
+        });
+      }
       return NextResponse.json({ lesson, lessonId: savedModule.id });
     }
 

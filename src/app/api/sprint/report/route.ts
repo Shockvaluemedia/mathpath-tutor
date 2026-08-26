@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_PROGRESS } from "@/lib/demo-data";
-import { buildEmptySprintReport, buildSprintReport } from "@/lib/sprint";
+import { buildDemoSprintReport, buildEmptySprintReport, buildSprintReport } from "@/lib/sprint";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import { splitStoredSnapshots } from "@/lib/sprint-evidence";
+import {
+  getLatestSprintEnrollment,
+  recordSprintEvent,
+} from "@/lib/sprint-events";
 
 async function getStudentId(request: NextRequest) {
   if (request.method === "GET") {
@@ -22,11 +27,13 @@ async function getSprintReport(request: NextRequest) {
   if (DEMO_MODE) {
     const progress = (DEMO_PROGRESS as any)[studentId];
     return NextResponse.json({
-      report: progress ? buildSprintReport(progress) : buildEmptySprintReport(studentId),
+      report: progress
+        ? buildDemoSprintReport(progress, { completeSprint: true })
+        : buildEmptySprintReport(studentId),
     });
   }
 
-  const { db: prisma } = await import("@/lib/db");
+  const { prisma } = await import("@/lib/db");
   const access = await requireRequestLearnerAccess(request, studentId);
   if (!access.ok) return access.response;
 
@@ -45,6 +52,28 @@ async function getSprintReport(request: NextRequest) {
   if (!learner) {
     return NextResponse.json({ error: "Student not found" }, { status: 404 });
   }
+
+  const enrollment = await getLatestSprintEnrollment(studentId);
+  if (enrollment) {
+    await recordSprintEvent({
+      enrollmentId: enrollment.id,
+      name: "sprint_report_viewed",
+      idempotencyKey: `${enrollment.id}:sprint_report_viewed`,
+    });
+  }
+  const snapshots = enrollment
+    ? await prisma.sprintSkillSnapshot.findMany({
+        where: { enrollmentId: enrollment.id },
+        orderBy: { capturedAt: "asc" },
+      })
+    : [];
+  const events = enrollment
+    ? await prisma.sprintEvent.findMany({
+        where: { enrollmentId: enrollment.id },
+        orderBy: { occurredAt: "asc" },
+      })
+    : [];
+  const evidence = splitStoredSnapshots(snapshots);
 
   const now = new Date();
   const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -75,18 +104,24 @@ async function getSprintReport(request: NextRequest) {
     skills: {
       mastered: learner.skillMastery
         .filter((skill: any) => skill.status === "MASTERED")
-        .map((skill: any) => ({ name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
+        .map((skill: any) => ({ skillId: skill.skillId, name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
       developing: learner.skillMastery
         .filter((skill: any) => skill.status === "DEVELOPING" || skill.status === "PRACTICING")
-        .map((skill: any) => ({ name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
+        .map((skill: any) => ({ skillId: skill.skillId, name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
       weak: learner.skillMastery
         .filter((skill: any) => skill.status === "NOT_STARTED" || skill.masteryScore < 40)
-        .map((skill: any) => ({ name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
+        .map((skill: any) => ({ skillId: skill.skillId, name: skill.skill.name, domain: skill.skill.domainId ?? "Math", score: skill.masteryScore })),
     },
-    latestReport: learner.reports[0]?.data ?? null,
+    latestReport: (learner.reports[0]?.data ?? null) as any,
   };
 
-  return NextResponse.json({ report: buildSprintReport(progress) });
+  return NextResponse.json({
+    report: buildSprintReport(progress, {
+      baseline: evidence.baseline,
+      endline: evidence.endline,
+      events: events.map((event) => event.name),
+    }),
+  });
 }
 
 export async function GET(request: NextRequest) {

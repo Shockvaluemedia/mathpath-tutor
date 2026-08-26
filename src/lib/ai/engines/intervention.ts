@@ -13,7 +13,7 @@ export const interventionEngine = {
     const prompt = `Analyze this learner's profile and determine if an intervention is needed.
 
 Domain: ${domainName}
-Learner: ${learner.name}, Age ${learner.age}, Grade ${learner.grade}
+Learner context: Grade ${learner.grade}, stage ${learner.developmentalStage}
 Confidence: ${learner.confidenceLevel}/10
 Frustration threshold: ${learner.frustrationThreshold}/10
 Engagement: ${learner.engagementPattern}
@@ -46,6 +46,7 @@ Return JSON:
       ],
       jsonMode: true,
       temperature: 0.4,
+      observability: { operationType: "LEGACY_INTERVENTION_RECOMMENDATION", learnerId: learner.id, metadata: { domain: domainName } },
     });
 
     return JSON.parse(content);

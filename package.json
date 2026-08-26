@@ -12,6 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:rebuild-cognitive-models": "npx tsx scripts/rebuild-cognitive-models.ts",
+    "db:rebuild-review-schedules": "npx tsx scripts/rebuild-review-schedules.ts",
     "db:studio": "prisma studio",
     "deploy:test": "cdk deploy --app \"npx tsx infra/app.ts\" -c deploymentMode=testing",
     "deploy:prod": "cdk deploy --app \"npx tsx infra/app.ts\" -c deploymentMode=production",

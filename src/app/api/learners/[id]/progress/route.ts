@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_PROGRESS } from "@/lib/demo-data";
 import { prisma } from "@/lib/db";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import { buildLearnerIntelligenceSnapshot } from "@/lib/learning/intelligence";
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +12,7 @@ export async function GET(
     const { id: learnerId } = await params;
 
     if (DEMO_MODE) {
-      const progress = (DEMO_PROGRESS as any)[learnerId];
+      const progress = DEMO_PROGRESS[learnerId as keyof typeof DEMO_PROGRESS];
       if (!progress) {
         return NextResponse.json({ error: "Learner not found" }, { status: 404 });
       }
@@ -53,6 +54,7 @@ export async function GET(
     const weakSkills = learner.skillMastery.filter((sm) => sm.status === "NOT_STARTED" || sm.status === "EMERGING" || sm.masteryScore < 40);
 
     const confidenceTrend = avgConfidence > 6 ? "improving" : avgConfidence < 4 ? "declining" : "stable";
+    const intelligence = await buildLearnerIntelligenceSnapshot(learnerId);
 
     return NextResponse.json({
       student: {
@@ -84,6 +86,7 @@ export async function GET(
         completed: !!m.completedAt,
         date: m.createdAt.toISOString(),
       })),
+      intelligence,
       latestReport: learner.reports[0] || null,
     });
   } catch (error) {

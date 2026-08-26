@@ -16,7 +16,7 @@ export const profileEngine = {
   ): Promise<SkillProfile> {
     const prompt = `Analyze this learner's assessment in ${domainName} and generate a skill profile.
 
-Learner: ${learner.name}, Age ${learner.age}, Grade ${learner.grade}, Stage: ${learner.developmentalStage}
+Learner context: Grade ${learner.grade}, Stage ${learner.developmentalStage}
 Confidence: ${learner.confidenceLevel}/10
 Style: ${learner.preferredStyle}
 Challenges: ${learner.challenges.join(", ")}
@@ -42,6 +42,7 @@ Return JSON:
       ],
       jsonMode: true,
       temperature: 0.4,
+      observability: { operationType: "DOMAIN_SKILL_PROFILE", learnerId: learner.id, metadata: { domain: domainName } },
     });
 
     return JSON.parse(content);

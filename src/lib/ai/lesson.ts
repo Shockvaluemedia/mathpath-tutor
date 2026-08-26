@@ -11,8 +11,6 @@ export async function generateDailyLesson(
   const prompt = `Generate a complete daily math lesson for this student:
 
 Student:
-- Name: ${studentProfile.name}
-- Age: ${studentProfile.age}
 - Grade: ${studentProfile.grade}
 - Grade Band: ${studentProfile.gradeBand}
 - Learning preference: ${studentProfile.learningPreferences.style}
@@ -38,7 +36,8 @@ Return a JSON object with:
 - challenge: 1 stretch problem that extends the concept
 - reflection: a question asking the student what they learned or found tricky
 
-Each section format: { title, instructions, content, questions?: [{question, hints: [], answer, explanation}] }
+Each section format: { title, instructions, content, representation, questions?: [{question, hints: [], answer, explanation}] }
+Choose one honest representation label per section from: visual-model, number-line, symbolic, verbal, real-world-context, teach-back. The label must describe the actual section content.
 
 Make the lesson age-appropriate, engaging, and confidence-building.`;
 
@@ -52,6 +51,7 @@ Make the lesson age-appropriate, engaging, and confidence-building.`;
     ],
     jsonMode: true,
     temperature: 0.7,
+    observability: { operationType: "LESSON_GENERATION", learnerId: studentProfile.id },
   });
 
   return JSON.parse(content) as DailyLesson;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -21,11 +21,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/components/providers/auth-provider";
 import type { PilotParticipant, PilotSummary } from "@/lib/pilot";
+import type { OperatorLearningSystemSnapshot } from "@/lib/learning/evaluation";
+import { LearningSystemPanel } from "@/components/pilot/learning-system-panel";
 
 const funnelLabels = [
   { key: "invited", label: "Invited" },
   { key: "diagnosticStarted", label: "Started" },
   { key: "diagnosticCompleted", label: "Diagnostic" },
+  { key: "paid", label: "Paid" },
   { key: "firstLesson", label: "Lesson" },
   { key: "threeSessions", label: "3 Sessions" },
   { key: "reportViewed", label: "Report" },
@@ -39,6 +42,9 @@ const actionPriorityRank = {
 } as const;
 
 function actionHref(stage: PilotParticipant["operatorAction"]["stage"]) {
+  if (stage === "payment") {
+    return "/billing/plans";
+  }
   if (stage === "report" || stage === "feedback" || stage === "continuation") {
     return "/sprint/report";
   }
@@ -54,21 +60,34 @@ function priorityClass(priority: PilotParticipant["operatorAction"]["priority"])
 export default function AdminPilotPage() {
   const { apiRequest } = useAuth();
   const [summary, setSummary] = useState<PilotSummary | null>(null);
+  const [learningSystem, setLearningSystem] = useState<OperatorLearningSystemSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedActionId, setCopiedActionId] = useState<string | null>(null);
+  const [savingActionId, setSavingActionId] = useState<string | null>(null);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiRequest("/api/pilot/summary");
-      setSummary(data);
+      const [pilotResult, systemResult] = await Promise.allSettled([
+        apiRequest("/api/pilot/summary"),
+        apiRequest("/api/admin/learning-system"),
+      ]);
+      if (pilotResult.status === "rejected") throw pilotResult.reason;
+      setSummary(pilotResult.value);
+      if (systemResult.status === "fulfilled") {
+        setLearningSystem(systemResult.value);
+      } else {
+        console.error("Learning system summary failed:", systemResult.reason);
+        setLearningSystem(null);
+      }
     } catch (err) {
       console.error("Pilot summary failed:", err);
       setSummary(null);
+      setLearningSystem(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest]);
 
   const copyMessage = async (participantId: string, message: string) => {
     try {
@@ -85,9 +104,29 @@ export default function AdminPilotPage() {
     window.prompt("Copy this message:", message);
   };
 
+  const markInviteSent = async (participantId: string) => {
+    setSavingActionId(participantId);
+    try {
+      await apiRequest("/api/sprint/events", {
+        method: "POST",
+        body: JSON.stringify({
+          studentId: participantId,
+          name: "invite_sent",
+          referenceId: "operator",
+        }),
+      });
+      await loadSummary();
+    } catch (err) {
+      console.error("Mark invite sent failed:", err);
+    } finally {
+      setSavingActionId(null);
+    }
+  };
+
   useEffect(() => {
-    loadSummary();
-  }, []);
+    const timer = window.setTimeout(loadSummary, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadSummary]);
 
   if (loading) {
     return (
@@ -150,9 +189,18 @@ export default function AdminPilotPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
+      {summary.mode === "demo" && (
+        <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Demo data only. Families, payments, outcomes, and quotes on this screen are synthetic.
+        </div>
+      )}
+
+      {learningSystem && <LearningSystemPanel snapshot={learningSystem} />}
+
+      <div className="mb-6 grid gap-4 md:grid-cols-5">
         <MetricCard icon={<Users className="h-5 w-5 text-emerald-700" />} label="Families Invited" value={`${summary.overview.invited}/${summary.targetFamilies}`} />
         <MetricCard icon={<ClipboardList className="h-5 w-5 text-sky-600" />} label="Diagnostics Done" value={summary.overview.diagnosticCompleted} />
+        <MetricCard icon={<CheckCircle2 className="h-5 w-5 text-emerald-700" />} label="Families Paid" value={summary.overview.paid} />
         <MetricCard icon={<BarChart3 className="h-5 w-5 text-amber-600" />} label="Reports Viewed" value={`${summary.overview.reportViewed}`} />
         <MetricCard icon={<MessageSquare className="h-5 w-5 text-rose-600" />} label="Feedback Captured" value={summary.overview.feedbackReceived} />
       </div>
@@ -186,6 +234,16 @@ export default function AdminPilotPage() {
                     <Copy className="mr-2 h-4 w-4" />
                     {copiedActionId === participant.id ? "Copied" : "Copy Message"}
                   </Button>
+                  {action.stage === "invite" && summary.mode === "live" && (
+                    <Button
+                      variant="outline"
+                      disabled={savingActionId === participant.id}
+                      onClick={() => markInviteSent(participant.id)}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      {savingActionId === participant.id ? "Saving..." : "Mark Sent"}
+                    </Button>
+                  )}
                   <Link href={actionHref(action.stage)}>
                     <Button className="w-full bg-emerald-700 hover:bg-emerald-800">
                       Open Follow-Up
@@ -240,7 +298,7 @@ export default function AdminPilotPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <div className="min-w-[820px] space-y-3">
+            <div className="space-y-3 md:min-w-[820px]">
               {summary.participants.map((participant) => (
                 <ParticipantRow key={participant.id} participant={participant} />
               ))}
@@ -263,7 +321,11 @@ export default function AdminPilotPage() {
                     <Badge variant="outline">{feedback.continueIntent}</Badge>
                   </div>
                   <p className="text-sm text-gray-600">{feedback.concern}</p>
-                  {feedback.quote && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge variant="outline">Price: {feedback.priceIntent}</Badge>
+                    <Badge variant="outline">Referral: {feedback.referralIntent}</Badge>
+                  </div>
+                  {feedback.quote && feedback.quoteConsent && (
                     <p className="mt-3 border-l-2 border-emerald-500 pl-3 text-sm text-gray-700">
                       {feedback.quote}
                     </p>
@@ -282,7 +344,7 @@ export default function AdminPilotPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-gray-700">
             <p>Send the sprint link, ask the parent to complete the diagnostic with one learner, then schedule a check-in after the third session.</p>
-            <p>Success signal: parent can name the first math gap, sees the report as clear, and says yes or maybe to continuing.</p>
+            <p>Success signal: parent sees measured change, completes checkout, and says yes or maybe to continuing or referring another family.</p>
             <p className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
               Script file: docs/pilot-tester-script.md
             </p>
@@ -321,26 +383,30 @@ function ProgressLine({ label, value, detail }: { label: string; value: number; 
 
 function ParticipantRow({ participant }: { participant: PilotParticipant }) {
   return (
-    <div className="grid grid-cols-[180px_110px_repeat(7,92px)] items-center gap-2 rounded-md border bg-white p-3">
-      <div>
-        <p className="text-sm font-medium text-gray-950">{participant.familyName}</p>
-        <p className="text-xs text-gray-500">{participant.studentName}, Grade {participant.grade}</p>
-      </div>
-      <Badge variant={participant.status === "proof_ready" ? "default" : "outline"} className="justify-center">
-        {participant.status.replace(/_/g, " ")}
-      </Badge>
-      {funnelLabels.map((step) => (
-        <div key={step.key} className="text-center">
-          <div className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full border bg-gray-50">
-            {participant.funnel[step.key] ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-            ) : (
-              <span className="h-2 w-2 rounded-full bg-gray-300" />
-            )}
-          </div>
-          <p className="text-[10px] text-gray-500">{step.label}</p>
+    <div className="rounded-md border bg-white p-3 md:grid md:grid-cols-[180px_110px_repeat(8,92px)] md:items-center md:gap-2">
+      <div className="flex items-start justify-between gap-3 md:contents">
+        <div>
+          <p className="text-sm font-medium text-gray-950">{participant.familyName}</p>
+          <p className="text-xs text-gray-500">{participant.studentName}, Grade {participant.grade}</p>
         </div>
-      ))}
+        <Badge variant={participant.status === "proof_ready" ? "default" : "outline"} className="justify-center">
+          {participant.status.replace(/_/g, " ")}
+        </Badge>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-3 md:contents">
+        {funnelLabels.map((step) => (
+          <div key={step.key} className="text-center">
+            <div className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full border bg-gray-50">
+              {participant.funnel[step.key] ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-gray-300" />
+              )}
+            </div>
+            <p className="text-[10px] text-gray-500">{step.label}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

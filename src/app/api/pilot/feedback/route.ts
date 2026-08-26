@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEMO_MODE, DEMO_PROGRESS } from "@/lib/demo-data";
 import { requireRequestLearnerAccess } from "@/lib/auth-middleware";
+import {
+  getLatestSprintEnrollment,
+  recordSprintEvent,
+} from "@/lib/sprint-events";
 
 const validIntent = new Set(["yes", "maybe", "no"]);
 
@@ -12,8 +16,15 @@ export async function POST(request: NextRequest) {
     const continueIntent = typeof body.continueIntent === "string" && validIntent.has(body.continueIntent)
       ? body.continueIntent
       : "maybe";
+    const priceIntent = typeof body.priceIntent === "string" && validIntent.has(body.priceIntent)
+      ? body.priceIntent
+      : "maybe";
+    const referralIntent = typeof body.referralIntent === "string" && validIntent.has(body.referralIntent)
+      ? body.referralIntent
+      : "maybe";
     const concern = typeof body.concern === "string" ? body.concern.trim().slice(0, 500) : "";
     const quote = typeof body.quote === "string" ? body.quote.trim().slice(0, 500) : "";
+    const quoteConsent = body.quoteConsent === true;
 
     if (!studentId) {
       return NextResponse.json({ error: "Student ID required" }, { status: 400 });
@@ -33,8 +44,11 @@ export async function POST(request: NextRequest) {
           submittedAt: new Date().toISOString(),
           clarityRating,
           continueIntent,
+          priceIntent,
+          referralIntent,
           concern,
           quote,
+          quoteConsent,
         },
       });
     }
@@ -58,11 +72,30 @@ export async function POST(request: NextRequest) {
         data: {
           clarityRating,
           continueIntent,
+          priceIntent,
+          referralIntent,
           concern,
           quote,
+          quoteConsent,
         },
       },
     });
+
+    const enrollment = await getLatestSprintEnrollment(studentId);
+    if (enrollment) {
+      await recordSprintEvent({
+        enrollmentId: enrollment.id,
+        name: "parent_feedback_submitted",
+        idempotencyKey: `${enrollment.id}:parent_feedback_submitted:${feedback.id}`,
+        metadata: {
+          feedbackId: feedback.id,
+          continueIntent,
+          priceIntent,
+          referralIntent,
+          quoteConsent,
+        },
+      });
+    }
 
     return NextResponse.json({
       feedback: {
@@ -72,8 +105,11 @@ export async function POST(request: NextRequest) {
         submittedAt: feedback.createdAt.toISOString(),
         clarityRating,
         continueIntent,
+        priceIntent,
+        referralIntent,
         concern,
         quote,
+        quoteConsent,
       },
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { chatCompletion } from "./config";
 import { ParentReportData } from "../types";
 
 interface StudentProgressData {
+  studentId?: string;
   studentName: string;
   age: number;
   grade: number;
@@ -32,7 +33,7 @@ export async function generateParentReport(
 
   const prompt = `Generate a parent-friendly weekly progress report for a math tutoring student.
 
-Student: ${progressData.studentName}, Age ${progressData.age}, Grade ${progressData.grade}
+Learner context: Grade ${progressData.grade}, developmental band ${progressData.gradeBand}
 Week: ${progressData.weekStart} to ${progressData.weekEnd}
 
 This week's activity:
@@ -68,6 +69,7 @@ Use plain language - no jargon. Return valid JSON only.`,
     ],
     jsonMode: true,
     temperature: 0.6,
+    observability: { operationType: "PARENT_REPORT", learnerId: progressData.studentId },
   });
 
   const parsed = JSON.parse(content);
